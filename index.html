@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>QuantTrader Dashboard</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src='https://tailwindcss.com'></script>
+    <!-- Chart.js CDN for financial data plotting -->
+    <script src='https://jsdelivr.net'></script>
+</head>
+<body class='bg-[#0B0E11] text-gray-100 font-sans min-h-screen flex flex-col'>
+
+    <!-- Header / Navbar -->
+    <header class='bg-[#161A1E] border-b border-gray-800 px-6 py-4 flex justify-between items-center'>
+        <div class='flex items-center space-x-3'>
+            <span class='text-xl font-bold tracking-wider text-green-400'>QUANT_TRADER</span>
+            <span class='bg-green-500/10 text-green-400 text-xs px-2 py-0.5 rounded border border-green-500/20 font-mono'>v1.0.0</span>
+        </div>
+        <div class='flex items-center space-x-4'>
+            <div class='flex items-center space-x-2'>
+                <span class='h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse'></span>
+                <span class='text-sm text-gray-400 font-mono'>Alpaca Paper API: Connected</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class='flex-1 p-6 max-w-7xl w-full mx-auto grid grid-cols-1 md:grid-cols-3 gap-6'>
+        
+        <!-- Metrics Panel (Left Sidebar / Top Rows) -->
+        <div class='md:col-span-1 flex flex-col space-y-6'>
+            <!-- Account Equity Card -->
+            <div class='bg-[#161A1E] p-6 rounded-xl border border-gray-800 shadow-xl'>
+                <p class='text-xs font-semibold text-gray-400 uppercase tracking-wider'>Account Equity</p>
+                <h2 id='account-equity' class='text-3xl font-bold font-mono mt-2 text-white'>$5,000.00</h2>
+                <div class='flex items-center space-x-2 mt-3 text-sm'>
+                    <span class='text-green-400 font-medium'>+0.00%</span>
+                    <span class='text-gray-500'>today</span>
+                </div>
+            </div>
+
+            <!-- Buying Power Card -->
+            <div class='bg-[#161A1E] p-6 rounded-xl border border-gray-800 shadow-xl'>
+                <p class='text-xs font-semibold text-gray-400 uppercase tracking-wider'>Buying Power</p>
+                <h2 id='buying-power' class='text-2xl font-bold font-mono mt-2 text-gray-200'>$20,000.00</h2>
+                <p class='text-xs text-gray-500 mt-2 font-mono'>Leverage Multiplier: 4x</p>
+            </div>
+
+            <!-- Strategy Controls Card -->
+            <div class='bg-[#161A1E] p-6 rounded-xl border border-gray-800 shadow-xl'>
+                <h3 class='text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4'>Bot Controls</h3>
+                <div class='flex space-x-3'>
+                    <button id='btn-start' class='flex-1 bg-green-600 hover:bg-green-500 text-white font-medium py-2 rounded-lg transition dynamic-btn'>
+                        Start Bot
+                    </button>
+                    <button id='btn-stop' class='flex-1 bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white font-medium py-2 rounded-lg border border-red-500/20 transition dynamic-btn'>
+                        Stop Bot
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charting & Positions Panel (Right Content Area) -->
+        <div class='md:col-span-2 flex flex-col space-y-6'>
+            <!-- Technical Analysis Chart Card -->
+            <div class='bg-[#161A1E] p-6 rounded-xl border border-gray-800 shadow-xl flex-1 flex flex-col min-h-[350px]'>
+                <div class='flex justify-between items-center mb-4'>
+                    <h3 class='text-sm font-semibold text-gray-300 uppercase tracking-wider'>Performance Chart</h3>
+                    <span class='text-xs font-mono bg-gray-800 px-2 py-1 rounded text-gray-400'>Mock Data</span>
+                </div>
+                <div class='relative flex-1 w-full'>
+                    <canvas id='performanceChart'></canvas>
+                </div>
+            </div>
+
+            <!-- Open Positions Container Table -->
+            <div class='bg-[#161A1E] p-6 rounded-xl border border-gray-800 shadow-xl'>
+                <h3 class='text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4'>Active Positions</h3>
+                <div class='overflow-x-auto'>
+                    <table class='w-full text-left border-collapse'>
+                        <thead>
+                            <tr class='border-b border-gray-800 text-xs font-semibold text-gray-400 uppercase tracking-wider'>
+                                <th class='pb-3'>Asset</th>
+                                <th class='pb-3 text-right'>Qty</th>
+                                <th class='pb-3 text-right'>Avg Entry</th>
+                                <th class='pb-3 text-right'>Current Price</th>
+                                <th class='pb-3 text-right'>Total Return</th>
+                            </tr>
+                        </thead>
+                        <tbody id='positions-list' class='divide-y divide-gray-800 text-sm font-mono text-gray-300'>
+                            <!-- Managed dynamically via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- JavaScript Execution Layer -->
+    <script>
+        // 1. Target and define active DOM element paths
+        const accountEquityEl = document.getElementById('account-equity');
+        const buyingPowerEl = document.getElementById('buying-power');
+        const positionsListEl = document.getElementById('positions-list');
+        const btnStart = document.getElementById('btn-start');
+        const btnStop = document.getElementById('btn-stop');
+
+        // 2. Initialize localized operational state values
+        let botActive = false;
+        const mockPositions = [
+            { symbol: 'AAPL', qty: 10, entry: 175.50, current: 178.20 },
+            { symbol: 'TSLA', qty: 5, entry: 185.00, current: 181.40 }
+        ];
+
+        // 3. Mount and configure the visualization canvas engine
+        const ctx = document.getElementById('performanceChart').getContext('2d');
+        const performanceChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['09:30', '10:30', '11:30', '12:30', '13:30', '14:30', '15:30'],
+                datasets: [{
+                    label: 'Portfolio Value ($)',
+                    data: [5000, 5010, 4985, 5020, 5045, 5015, 5035],
+                    borderColor: '#00C805',
+                    backgroundColor: 'rgba(0, 200, 5, 0.05)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: { grid: { color: '#22262B' }, ticks: { color: '#9CA3AF' } },
+                    y: { grid: { color: '#22262B' }, ticks: { color: '#9CA3AF' } }
+                }
+            }
+        });
+
+        // 4. Render existing positions inside the framework matrix table
+        const renderPositions = () => {
+            positionsListEl.innerHTML = '';
+            
+            if (mockPositions.length === 0) {
+                positionsListEl.innerHTML = '<tr><td colspan="5" class="py-4 text-center text-gray-500 italic">No open positions.</td></tr>';
+                return;
+            }
+
+            mockPositions.forEach((pos) => {
+                const totalCost = pos.qty * pos.entry;
+                const currentVal = pos.qty * pos.current;
+                const pnl = currentVal - totalCost;
+                const pnlPercent = (pnl / totalCost) * 100;
+                
+                const isPositive = pnl >= 0;
+                const colorClass = isPositive ? 'text-green-400' : 'text-red-400';
+                const sign = isPositive ? '+' : '';
+
+                const rowHtml = `
+                    <tr class='hover:bg-gray-800/30 transition-colors'>
+                        <td class='py-3 font-bold text-white'>${pos.symbol}</td>
+                        <td class='py-3 text-right'>${pos.qty}</td>
+                        <td class='py-3 text-right'>$${pos.entry.toFixed(2)}</td>
+                        <td class='py-3 text-right'>$${pos.current.toFixed(2)}</td>
+                        <td class='py-3 text-right ${colorClass}'>${sign}$${pnl.toFixed(2)} (${sign}${pnlPercent.toFixed(2)}%)</td>
+                    </tr>
+                `;
+                positionsListEl.insertAdjacentHTML('beforeend', rowHtml);
+            });
+        };
+
+        // 5. Build interface interactivity configurations
+        btnStart.addEventListener('click', () => {
+            botActive = true;
+            console.log('Algorithmic execution profile loaded: True');
+            alert('Trading loop initialized. Ready to interface API endpoints.');
+        });
+
+        btnStop.addEventListener('click', () => {
+            botActive = false;
+            console.log('Algorithmic execution profile loaded: False');
+            alert('Trading loop paused. Open orders safely preserved.');
+        });
+
+        // 6. Execute runtime logic on application load
+        renderPositions();
+    </script>
+</body>
+</html>
+
