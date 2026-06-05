@@ -1,29 +1,43 @@
 # Quant Trader
 
-A modular, automated quantitative trading framework that performs global market data ingestion, algorithmic asset filtering, and multi-ticker execution loops using the Alpaca Paper Trading API.
+A modular quantitative trading framework that separates market orchestration, strategy logic, and execution layers while performing automated universe selection, signal generation, and paper-traded order execution through the Alpaca API.
 
 ## 🚀 System Architecture
 
-The application implements a high-utility 5-stage quantitative pipeline split across modular files to isolate strategic logic from data logging and state preservation:
+The application implements a five-stage quantitative pipeline split across modular components to separate market orchestration, strategy logic, execution, and performance tracking:
 
 1. **Bulk Ingestion**: Downloads thousands of active US equities from the exchange dynamically.
 2. **Price Filter Safety**: Screens out highly volatile penny stocks and un-diversifiable high-priced assets.
 3. **Math Ranking Engine**: Sorts the filtered market by Daily Dollar Volume via lightweight snapshots to extract an elite 100-ticker subset.
-4. **The 60s Execution Loop**: Performs fast, in-memory `pandas` math scans across the top 100 stocks every 60 seconds using minute-by-minute historical bars.
-5. **Friction Model**: Artificially penalizes buy/sell fills to accurately simulate bid-ask spreads, slippage, and SEC/FINRA regulatory trading fees.
+4. **Strategy Engine**: Executes modular trading strategies against the optimized universe using minute-level market data.
+5. **Execution Layer**: Centralizes order routing, time-in-force selection, and friction modeling to simulate real-world trading costs.
+
+The system separates responsibilities into three layers:
+
+- **Engine Layer** (`main.py`) – Handles scheduling, market hours, and strategy orchestration.
+- **Strategy Layer** (`strategies/`) – Generates trading signals and manages universe selection.
+- **Execution Layer** (`execution/`) – Routes orders and applies realistic trading friction models.
 
 ## 📂 Project Structure
 
 ```text
 quant-trader/
 │
-├── .env                    # Secret API credentials (ignored by git)
-├── .env.example            # Configuration template for developers
-├── .gitignore              # Prevents tracking of environment and database files
-├── trading_history.db      # Local SQLite database tracking equity growth
+├── .env
+├── .env.example
+├── .gitignore
+├── trading_history.db
 │
-├── database_manager.py     # State logger and database management functions
-└── main.py                 # Core market scanning loop and strategic execution
+├── main.py               # Engine coordinator and market-hours scheduler
+├── database_manager.py   # SQLite logging and portfolio history
+│
+├── strategies/
+│   ├── base_strategy.py  # Shared strategy interface
+│   ├── crypto_sma.py     # Crypto-based strategy
+│   └── equity_sma.py     # SMA-based equity strategy
+│
+└── execution/
+    └── orders.py         # Centralized order execution and friction modeling
 ```
 
 ## 🛠️ Installation and Workspace Setup
@@ -69,13 +83,13 @@ pip install pandas alpaca-py pandas-ta python-dotenv tzdata  pytz
 
 ## 🚦 Strategic Execution Rules
 
-* **Automated Daily Trigger**: Every morning at 09:00 AM, the bot triggers a time-conditional hook that rebuilds and ranks the top 100 liquidity list completely hands-free.
-* **Buy Conditions (Entry)**: Triggers an order if an asset belongs to the optimized top 100 list, its current minute close crosses above its 20-period Simple Moving Average (SMA), and the portfolio does not already contain it.
-* **Sell Conditions (Exit)**: Triggers an order if an owned asset's close price falls below its 20-period SMA, signaling a technical trend reversal.
+* **Automated Daily Optimization**: Rebuilds and re-ranks the liquidity universe whenever the market opens, ensuring the strategy operates on current market conditions.
+* **Buy Conditions (Entry)**: Triggers an order when an asset belongs to the optimized top-100 universe, its current price is above its 20-period SMA, and the portfolio does not already contain it.
+* **Sell Conditions (Exit)**: Triggers an order when an owned asset's price falls below its 20-period SMA.
 
 ## 📈 Performance Tracking
 
-The bot query-tracks accounting metrics from Alpaca's clearing engine on every loop cycle. Financial data points are stored in a local SQLite database table (`portfolio_history`) to chart equity curve growth and measure the algorithm's mathematical profit factors over time.
+The bot records portfolio metrics from Alpaca on each execution cycle. Financial data points are stored in a local SQLite database table (`portfolio_history`) to chart equity curve growth and measure the algorithm's mathematical profit factors over time.
 
 ## ⚖️ License
 
