@@ -6,10 +6,14 @@ from dotenv import load_dotenv
 
 # Alpaca SDK imports
 from alpaca.trading.client import TradingClient
-from alpaca.data.historical import StockHistoricalDataClient
+from alpaca.data.historical import (
+    StockHistoricalDataClient, 
+    CryptoHistoricalDataClient
+)
 
 # Local imports 
 from strategies.equity_sma import EquitySMAStrategy
+from strategies.crypto_sma import CryptoSMAStrategy
 from database_manager import init_database, log_balance
 
 # ==============================================================================
@@ -20,9 +24,11 @@ API_KEY = os.getenv('ALPACA_API_KEY')
 SECRET_KEY = os.getenv('ALPACA_SECRET_KEY')
 
 trading_client = TradingClient(api_key=API_KEY, secret_key=SECRET_KEY, paper=True)
-data_client = StockHistoricalDataClient(api_key=API_KEY, secret_key=SECRET_KEY)
-equity_strategy = EquitySMAStrategy(trading_client, data_client)
-strategies = [equity_strategy]
+stock_data_client = StockHistoricalDataClient(api_key=API_KEY, secret_key=SECRET_KEY)
+crypto_data_client = CryptoHistoricalDataClient(api_key=API_KEY, secret_key=SECRET_KEY)
+equity_strategy = EquitySMAStrategy(trading_client, stock_data_client)
+crypto_strategy = CryptoSMAStrategy(trading_client, crypto_data_client)
+strategies = [equity_strategy, crypto_strategy]
 
 init_database()
 print() # Add terminal spacing
@@ -33,28 +39,43 @@ print() # Add terminal spacing
 def main():
     print('🚀 Initializing System Engine...')
     
-    # Establish dynamic, DST-safe Eastern Time timezone tracking object
-    est_tz = ZoneInfo('America/New_York')
-    previous_market_state = True
     for strategy in strategies:
         strategy.optimize_universe()
-        print(
-            f'--- {strategy.__class__.__name__} '
-            f'universe size: {len(strategy.universe)} ---'
-        )    
+
+    for strategy in strategies:
+        strategy.run()        
     
+    est_tz = ZoneInfo('America/New_York') # DST-safe Eastern Time timezone object
+    previous_market_state = trading_client.get_clock().is_open
+    time.sleep(60) # Wait a minute before starting ongoing checks    
+    
+    # Check every 60 seconds
     while True:
         clock = trading_client.get_clock()        
         loop_start = time.time()
         now_est = datetime.now(est_tz)
         current_date = now_est.strftime('%Y-%m-%d')
         current_time = now_est.strftime('%H:%M')
+        runnable_strategies = [
+            strategy
+            for strategy in strategies
+            if strategy.should_run()
+        ]
+        
+        # Equity market just opened        
+        if clock.is_open and not previous_market_state:
+            print(f'--- Equity market opened [{current_date}, {current_time}] ---')
+            for strategy in strategies:
+                strategy.optimize_universe()
+            previous_market_state = True           
             
-        # Market closed    
-        if not clock.is_open:
-            if previous_market_state: # Previous state was open
-                print(f'--- Market closed [{current_date}, {current_time}]. Sleeping... ---')
-                previous_market_state = False
+        # Equity market just closed    
+        elif not clock.is_open and previous_market_state:
+            print(f'--- Equity market closed [{current_date}, {current_time}] ---')
+            previous_market_state = False    
+                
+        if not runnable_strategies:
+            print(f'--- No runnable strategies. Sleeping... ---')
             
             if clock.next_open:
                 seconds_until_open = (clock.next_open - now_est).total_seconds() 
@@ -63,27 +84,14 @@ def main():
             
             sleep_time = max(60, min(seconds_until_open, 1800)) # Wait at least 1 minute, no more than 30
             time.sleep(sleep_time)
-            continue
-        
-        # Market just opened        
-        if not previous_market_state:
-            print(f'--- Market opened [{current_date}, {current_time}] ---')
-            for strategy in strategies:
-                strategy.optimize_universe()
-                print(
-                    f'--- {strategy.__class__.__name__} '
-                    f'universe size: {len(strategy.universe)} ---'
-                )
-            previous_market_state = True    
+            continue 
         
         print(f'--- Starting Minute Scan [{current_date}, {current_time}] ---')    
-    
-        try:         
-            for strategy in strategies:
-                try:
-                    strategy.run()
-                except Exception as e:
-                    print(f'🚨 Strategy Error [{strategy.__class__.__name__}]: {e}')
+        
+        try:
+            for strategy in runnable_strategies:
+                print(f'Running {strategy.NAME}')
+                strategy.run()
                 
             elapsed = time.time() - loop_start # For locking exact 60-second boundaries            
             print(f'--- Scan Finished. Local Math Engine Execution Time: {elapsed:.2f}s ---')
@@ -103,7 +111,7 @@ def main():
             
         except Exception as e:
             print(f'🚨 Global Engine Error: {e}')
-            time.sleep(10)
+            time.sleep(10)            
 
 if __name__ == '__main__':
     main()

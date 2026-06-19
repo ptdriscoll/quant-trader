@@ -1,6 +1,9 @@
-class Strategy:
+class BaseStrategy:
     def optimize_universe(self):
-        pass
+        raise NotImplementedError
 
+    def is_active(self):
+        raise NotImplementedError
+        
     def run(self):
-        pass
+        raise NotImplementedError

@@ -3,23 +3,32 @@ import time
 import pandas as pd
 from pandas_ta import sma
 from execution.orders import execute_order
+from strategies.base_strategy import BaseStrategy
 
 from alpaca.trading.enums import OrderSide, AssetClass, AssetStatus
 from alpaca.trading.requests import GetAssetsRequest
-
 from alpaca.data.requests import StockBarsRequest, StockSnapshotRequest
 from alpaca.data.timeframe import TimeFrame
 
-class EquitySMAStrategy:
+class EquitySMAStrategy(BaseStrategy):
+    NAME = 'EquitySMAStrategy'
+    ASSET_TYPE = 'equity'
+    
     def __init__(self, trading_client, data_client):
         self.trading_client = trading_client
         self.data_client = data_client
         self.universe = []
         self.execute_order = execute_order
+        
+    def should_run(self):
+        return self.trading_client.get_clock().is_open        
 
     def optimize_universe(self):
         """Checks all 8,000+ tickers using light snapshots and gets top 100."""
-        print('⏰ Running comprehensive market optimization across all stocks...')
+        print(
+            f'⏰ [{self.NAME}] '
+            f'Running comprehensive market optimization across all stocks...'
+        )
         
         try:
             # Step 1: Bulk ingestion (get all 8,000+ active symbols)
@@ -58,10 +67,13 @@ class EquitySMAStrategy:
             top_100_df = ranking_df.sort_values(by='dollar_volume', ascending=False).head(100)
             self.universe = top_100_df['ticker'].tolist()
             
-            print(f'✅ Global optimization complete. Tracking the top {len(self.universe)} stocks.')
+            print(
+                f'✅ [{self.NAME}] '
+                f'Global optimization complete. Tracking the top {len(self.universe)} stocks.'
+            )
             
         except Exception as e:
-            print(f'❌ Comprehensive optimization failed: {e}.')
+            print(f'❌ [{self.NAME}] Comprehensive optimization failed: {e}.')
             sys.exit(1) 
         
     def generate_signal(self, close, sma, owned):
@@ -75,8 +87,9 @@ class EquitySMAStrategy:
 
     def run(self):
         if not self.universe:
-            print('⚠️ Universe is empty. Run optimize_universe() first.')
-            return
+            raise RuntimeError(
+                f'[{self.NAME}] Universe is empty. Run optimize_universe() first.'
+            )
 
         try:
             # 1. Fetch latest market data for universe
@@ -88,6 +101,9 @@ class EquitySMAStrategy:
 
             bars = self.data_client.get_stock_bars(request)
             master_df = bars.df
+            if master_df.empty:
+                print(f'⚠️ [{self.NAME}] No market data returned.')
+                return
 
             # 2. Get current positions
             positions = self.trading_client.get_all_positions()
@@ -95,10 +111,8 @@ class EquitySMAStrategy:
 
             # 3. Loop universe
             for ticker in self.universe:
-
                 try:
                     df = master_df.loc[ticker].copy()
-
                     df['SMA_20'] = sma(df['close'], length=20)
 
                     latest_close = df['close'].iloc[-1]
@@ -119,7 +133,7 @@ class EquitySMAStrategy:
                     if signal == 'BUY':
                         self.execute_order(
                             self.trading_client,
-                            'equity',
+                            self.ASSET_TYPE,
                             ticker,
                             OrderSide.BUY,
                             latest_close
@@ -128,7 +142,7 @@ class EquitySMAStrategy:
                     elif signal == 'SELL':
                         self.execute_order(
                             self.trading_client,
-                            'equity',
+                            self.ASSET_TYPE,
                             ticker,
                             OrderSide.SELL,
                             latest_close
@@ -139,4 +153,4 @@ class EquitySMAStrategy:
                     continue
 
         except Exception as e:
-            print(f'❌ Strategy run failed: {e}')         
+            print(f'❌ [{self.NAME}] Strategy run failed: {e}')         

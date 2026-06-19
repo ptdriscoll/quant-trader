@@ -13,35 +13,55 @@ FEE_MODEL = {
     }
 }
 
-def execute_order(asset_type, ticker, side, price):
+def execute_order(trading_client, asset_type, ticker, side, price):
     """Submits order while logging the true cost, including real-world friction penalties."""
     
-    model = FEE_MODEL[asset_type]
+    if asset_type not in FEE_MODEL:
+        raise ValueError(
+            f'Unsupported asset type: {asset_type}'
+        )
+        
+    model = FEE_MODEL[asset_type]    
     slippage_pct = model['slippage_pct']
     reg_fee = model.get('reg_fee_per_sell', 0)
+    fee_pct = model.get('taker_fee_pct', 0)
     
     if asset_type == 'crypto':
-        tif = TimeInForce.GTC
+        order_data = MarketOrderRequest(
+            symbol=ticker,
+            notional=100,
+            side=side,
+            time_in_force=TimeInForce.GTC
+        )
     else:
-        tif = TimeInForce.DAY
+        order_data = MarketOrderRequest(
+            symbol=ticker,
+            qty=1,
+            side=side,
+            time_in_force=TimeInForce.DAY
+        )
         
     try:
         # Step 5: Friction Model calculations
         if side == OrderSide.BUY:
             # Realistically pays slightly more than the displayed ticker price due to the spread
-            simulated_execution_price = price * (1 + slippage_pct)
-            print(f' Buying {ticker} | Display: ${price:.2f} | Simulated Fill: ${simulated_execution_price:.2f}')
+            simulated_execution_price = price * (1 + slippage_pct + fee_pct)
+            print(
+                f'[{asset_type.upper()}] '
+                f'BUY {ticker} | '
+                f'Display: ${price:.2f} | '
+                f'Simulated Fill: ${simulated_execution_price:.2f}'
+            )
         else:
             # Receives slightly less when selling, and must pay regulatory micro-fees
-            simulated_execution_price = (price * (1 - slippage_pct)) - reg_fee
-            print(f' Selling {ticker} | Display: ${price:.2f} | Simulated Fill: ${simulated_execution_price:.2f}')
+            simulated_execution_price = (price * (1 - slippage_pct - fee_pct)) - reg_fee
+            print(
+                f'[{asset_type.upper()}] '
+                f'SELL {ticker} | ' 
+                f'Display: ${price:.2f} | ' 
+                f'Simulated Fill: ${simulated_execution_price:.2f}'
+            )
             
-        order_data = MarketOrderRequest(
-            symbol=ticker,
-            qty=1,
-            side=side,
-            time_in_force=tif
-        )
         trading_client.submit_order(order_data=order_data)
         print(f'    ✅ Order dispatched safely for {ticker}.')
         
