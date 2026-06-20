@@ -1,43 +1,39 @@
 # Quant Trader
 
-A modular quantitative trading framework that separates market orchestration, strategy logic, and execution layers while performing automated universe selection, signal generation, and paper-traded order execution through the Alpaca API.
+A modular algorithmic trading framework that performs automated universe selection, signal generation, and paper-traded order execution through the Alpaca API. Strategies are implemented as independent modules and can be added without modifying the core execution engine.
 
-## 🚀 System Architecture
+## 🚀 Overview
 
-The application implements a five-stage quantitative pipeline split across modular components to separate market orchestration, strategy logic, execution, and performance tracking:
+The framework performs:
 
-1. **Bulk Ingestion**: Downloads thousands of active US equities from the exchange dynamically.
-2. **Price Filter Safety**: Screens out highly volatile penny stocks and un-diversifiable high-priced assets.
-3. **Math Ranking Engine**: Sorts the filtered market by Daily Dollar Volume via lightweight snapshots to extract an elite 100-ticker subset.
-4. **Strategy Engine**: Executes modular trading strategies against the optimized universe using minute-level market data.
-5. **Execution Layer**: Centralizes order routing, time-in-force selection, and friction modeling to simulate real-world trading costs.
+1. Market data ingestion
+2. Universe selection and optimization
+3. Strategy signal generation
+4. Automated order execution
+5. Portfolio performance tracking
 
 The system separates responsibilities into three layers:
 
-- **Engine Layer** (`main.py`) – Handles scheduling, market hours, and strategy orchestration.
-- **Strategy Layer** (`strategies/`) – Generates trading signals and manages universe selection.
-- **Execution Layer** (`execution/`) – Routes orders and applies realistic trading friction models.
+- **Engine Layer** (`main.py`) – Scheduling and strategy orchestration
+- **Strategy Layer** (`strategies/`) – Universe selection and signal generation
+- **Execution Layer** (`execution/`) – Order routing and trading friction models
 
 ## 📂 Project Structure
 
 ```text
 quant-trader/
 │
-├── .env
-├── .env.example
-├── .gitignore
-├── trading_history.db
-│
-├── main.py               # Engine coordinator and market-hours scheduler
-├── database_manager.py   # SQLite logging and portfolio history
+├── execution/
+│   └── orders.py
 │
 ├── strategies/
-│   ├── base_strategy.py  # Shared strategy interface
-│   ├── crypto_sma.py     # Crypto-based strategy
-│   └── equity_sma.py     # SMA-based equity strategy
+│   ├── base_strategy.py
+│   ├── equity_sma.py
+│   └── crypto_sma.py
 │
-└── execution/
-    └── orders.py         # Centralized order execution and friction modeling
+├── database_manager.py
+├── main.py
+└── trading_history.db
 ```
 
 ## 🛠️ Installation and Workspace Setup
@@ -45,6 +41,7 @@ quant-trader/
 This project supports isolated workflows using either **Conda** or native **Pip**.
 
 ### Option A: Conda Installation (Recommended)
+
 This method utilizes `conda-forge` to manage all analytical frameworks and API wrapper libraries inside an isolated environment.
 
 ```bash
@@ -62,6 +59,7 @@ conda install pandas -y
 ```
 
 ### Option B: Standard Python Installation (Pip)
+
 For setups running outside a Conda management environment, use native Python virtualization and the Python Package Index (PyPI).
 
 ```bash
@@ -81,16 +79,19 @@ pip install --upgrade pip
 pip install pandas alpaca-py pandas-ta python-dotenv tzdata  pytz
 ```
 
-## 🚦 Strategic Execution Rules
+To set up Alpaca Paper Trading, create an account at [https://alpaca.markets](https://alpaca.markets) and get an API key and secret. Then rename the `.env.example` file to `.env` and set the variables `ALPACA_PAPER_KEY` and `ALPACA_PAPER_SECRET` to match those from your account.
 
-* **Automated Daily Optimization**: Rebuilds and re-ranks the liquidity universe whenever the market opens, ensuring the strategy operates on current market conditions.
-* **Buy Conditions (Entry)**: Triggers an order when an asset belongs to the optimized top-100 universe, its current price is above its 20-period SMA, and the portfolio does not already contain it.
-* **Sell Conditions (Exit)**: Triggers an order when an owned asset's price falls below its 20-period SMA.
+## 🚦 Strategies
+
+| Strategy   | Universe              | Optimization | Timeframe | Buy Signal      | Sell Signal     |
+| ---------- | --------------------- | ------------ | --------- | --------------- | --------------- |
+| Equity SMA | Top 100 Dollar Volume | Daily        | 1m        | Price > SMA(20) | Price < SMA(20) |
+| Crypto SMA | BTC, ETH              | None         | 1m        | Price > SMA(20) | Price < SMA(20) |
 
 ## 📈 Performance Tracking
 
-The bot records portfolio metrics from Alpaca on each execution cycle. Financial data points are stored in a local SQLite database table (`portfolio_history`) to chart equity curve growth and measure the algorithm's mathematical profit factors over time.
+Portfolio equity, cash balance, and unrealized P&L are recorded to a local SQLite database for performance analysis.
 
 ## ⚖️ License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the MIT License.
