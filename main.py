@@ -1,5 +1,6 @@
 import os
 import time
+import traceback
 from datetime import datetime
 from zoneinfo import ZoneInfo # Daylight Savings Time handling for New York
 from dotenv import load_dotenv
@@ -51,44 +52,44 @@ def main():
     
     # Check every 60 seconds
     while True:
-        clock = trading_client.get_clock()        
-        loop_start = time.time()
-        now_est = datetime.now(est_tz)
-        current_date = now_est.strftime('%Y-%m-%d')
-        current_time = now_est.strftime('%H:%M')
-        runnable_strategies = [
-            strategy
-            for strategy in strategies
-            if strategy.should_run()
-        ]
-        
-        # Equity market just opened        
-        if clock.is_open and not previous_market_state:
-            print(f'--- Equity market opened [{current_date}, {current_time}] ---')
-            for strategy in strategies:
-                strategy.optimize_universe()
-            previous_market_state = True           
-            
-        # Equity market just closed    
-        elif not clock.is_open and previous_market_state:
-            print(f'--- Equity market closed [{current_date}, {current_time}] ---')
-            previous_market_state = False    
-                
-        if not runnable_strategies:
-            print(f'--- No runnable strategies. Sleeping... ---')
-            
-            if clock.next_open:
-                seconds_until_open = (clock.next_open - now_est).total_seconds() 
-            else:
-                seconds_until_open = 300            
-            
-            sleep_time = max(60, min(seconds_until_open, 1800)) # Wait at least 1 minute, no more than 30
-            time.sleep(sleep_time)
-            continue 
-        
-        print(f'--- Starting Minute Scan [{current_date}, {current_time}] ---')    
-        
         try:
+            clock = trading_client.get_clock()        
+            loop_start = time.time()
+            now_est = datetime.now(est_tz)
+            current_date = now_est.strftime('%Y-%m-%d')
+            current_time = now_est.strftime('%H:%M')
+            runnable_strategies = [
+                strategy
+                for strategy in strategies
+                if strategy.should_run()
+            ]
+            
+            # Equity market just opened        
+            if clock.is_open and not previous_market_state:
+                print(f'--- Equity market opened [{current_date}, {current_time}] ---')
+                for strategy in strategies:
+                    strategy.optimize_universe()
+                previous_market_state = True           
+                
+            # Equity market just closed    
+            elif not clock.is_open and previous_market_state:
+                print(f'--- Equity market closed [{current_date}, {current_time}] ---')
+                previous_market_state = False    
+                    
+            if not runnable_strategies:
+                print(f'--- No runnable strategies. Sleeping... ---')
+                
+                if clock.next_open:
+                    seconds_until_open = (clock.next_open - now_est).total_seconds() 
+                else:
+                    seconds_until_open = 300            
+                
+                sleep_time = max(60, min(seconds_until_open, 1800)) # Wait at least 1 minute, no more than 30
+                time.sleep(sleep_time)
+                continue 
+            
+            print(f'--- Starting Minute Scan [{current_date}, {current_time}] ---')         
+
             for strategy in runnable_strategies:
                 print(f'Running {strategy.NAME}')
                 strategy.run()
@@ -110,7 +111,8 @@ def main():
             time.sleep(sleep_duration)
             
         except Exception as e:
-            print(f'🚨 Global Engine Error: {e}')
+            print(f"🚨 Global Engine Error [{type(e).__name__}]: {e}")
+            traceback.print_exc()
             time.sleep(10)            
 
 if __name__ == '__main__':
