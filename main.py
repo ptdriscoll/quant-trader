@@ -16,6 +16,7 @@ from alpaca.data.historical import (
 from strategies.equity_sma import EquitySMAStrategy
 from strategies.crypto_sma import CryptoSMAStrategy
 from database_manager import init_database, log_balance
+from utils.api_metrics import ApiMetrics
 
 # ==============================================================================
 # CONFIGURATION & CLIENT INITIALIZATION
@@ -27,11 +28,14 @@ SECRET_KEY = os.getenv('ALPACA_SECRET_KEY')
 trading_client = TradingClient(api_key=API_KEY, secret_key=SECRET_KEY, paper=True)
 stock_data_client = StockHistoricalDataClient(api_key=API_KEY, secret_key=SECRET_KEY)
 crypto_data_client = CryptoHistoricalDataClient(api_key=API_KEY, secret_key=SECRET_KEY)
-equity_strategy = EquitySMAStrategy(trading_client, stock_data_client)
-crypto_strategy = CryptoSMAStrategy(trading_client, crypto_data_client)
+
+api_metrics = ApiMetrics()
+equity_strategy = EquitySMAStrategy(trading_client, stock_data_client, api_metrics)
+crypto_strategy = CryptoSMAStrategy(trading_client, crypto_data_client, api_metrics)
 strategies = [equity_strategy, crypto_strategy]
 
 init_database()
+
 print() # Add terminal spacing
 
 # ==============================================================================
@@ -47,21 +51,25 @@ def main():
         strategy.run()        
     
     est_tz = ZoneInfo('America/New_York') # DST-safe Eastern Time timezone object
+    api_metrics.record_request('get_clock')
     previous_market_state = trading_client.get_clock().is_open
     time.sleep(60) # Wait a minute before starting ongoing checks    
     
     # Check every 60 seconds
     while True:
+        loop_start = time.time()
         try:
-            clock = trading_client.get_clock()        
-            loop_start = time.time()
+            api_metrics.record_request('get_clock')
+            clock = trading_client.get_clock()  
+            
             now_est = datetime.now(est_tz)
             current_date = now_est.strftime('%Y-%m-%d')
             current_time = now_est.strftime('%H:%M')
+            
             runnable_strategies = [
                 strategy
                 for strategy in strategies
-                if strategy.should_run()
+                if strategy.should_run(clock)
             ]
             
             # Equity market just opened        
@@ -98,7 +106,9 @@ def main():
             print(f'--- Scan Finished. Local Math Engine Execution Time: {elapsed:.2f}s ---')
             
             # Fetch, display, and record financial progress entries
+            api_metrics.record_request('get_account')
             account = trading_client.get_account()
+            api_metrics.record_request('get_all_positions')
             positions = trading_client.get_all_positions()
             total_unrealized_pl = sum(float(position.unrealized_pl) for position in positions)
             log_balance(
@@ -106,11 +116,13 @@ def main():
                 cash=float(account.cash),
                 pl=total_unrealized_pl
             )
+            api_metrics.print_summary()
             
             sleep_duration = max(0, 60 - elapsed)
             time.sleep(sleep_duration)
             
         except Exception as e:
+            api_metrics.record_failure()
             print(f"🚨 Global Engine Error [{type(e).__name__}]: {e}")
             traceback.print_exc()
             time.sleep(10)            

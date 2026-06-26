@@ -14,14 +14,15 @@ class EquitySMAStrategy(BaseStrategy):
     NAME = 'EquitySMAStrategy'
     ASSET_TYPE = 'equity'
     
-    def __init__(self, trading_client, data_client):
+    def __init__(self, trading_client, data_client, api_metrics):
         self.trading_client = trading_client
         self.data_client = data_client
+        self.api_metrics = api_metrics
         self.universe = []
         self.execute_order = execute_order
         
-    def should_run(self):
-        return self.trading_client.get_clock().is_open        
+    def should_run(self, clock):
+        return clock.is_open        
 
     def optimize_universe(self):
         """Checks all 8,000+ tickers using light snapshots and gets top 100."""
@@ -33,6 +34,7 @@ class EquitySMAStrategy(BaseStrategy):
         try:
             # Step 1: Bulk ingestion (get all 8,000+ active symbols)
             search_params = GetAssetsRequest(status=AssetStatus.ACTIVE, asset_class=AssetClass.US_EQUITY)
+            self.api_metrics.record_request('get_all_assets')
             all_assets = self.trading_client.get_all_assets(search_params)
             all_symbols = [a.symbol for a in all_assets if a.tradable and a.marginable]
             
@@ -43,6 +45,7 @@ class EquitySMAStrategy(BaseStrategy):
             for i in range(0, len(all_symbols), chunk_size):
                 symbol_chunk = all_symbols[i:i + chunk_size]
                 snapshot_request = StockSnapshotRequest(symbol_or_symbols=symbol_chunk)
+                self.api_metrics.record_request('get_stock_snapshot')
                 snapshots = self.data_client.get_stock_snapshot(snapshot_request)
                 
                 for ticker, snapshot in snapshots.items():
@@ -98,7 +101,8 @@ class EquitySMAStrategy(BaseStrategy):
                 timeframe=TimeFrame.Minute,
                 limit=30
             )
-
+            
+            self.api_metrics.record_request('get_stock_bars')
             bars = self.data_client.get_stock_bars(request)
             master_df = bars.df
             if master_df.empty:
@@ -106,6 +110,7 @@ class EquitySMAStrategy(BaseStrategy):
                 return
 
             # 2. Get current positions
+            self.api_metrics.record_request('get_all_positions')
             positions = self.trading_client.get_all_positions()
             current_positions = {p.symbol for p in positions}
 
@@ -133,6 +138,7 @@ class EquitySMAStrategy(BaseStrategy):
                     if signal == 'BUY':
                         self.execute_order(
                             self.trading_client,
+                            self.api_metrics,
                             self.ASSET_TYPE,
                             ticker,
                             OrderSide.BUY,
@@ -142,6 +148,7 @@ class EquitySMAStrategy(BaseStrategy):
                     elif signal == 'SELL':
                         self.execute_order(
                             self.trading_client,
+                            self.api_metrics,
                             self.ASSET_TYPE,
                             ticker,
                             OrderSide.SELL,

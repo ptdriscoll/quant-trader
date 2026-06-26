@@ -13,7 +13,7 @@ FEE_MODEL = {
     }
 }
 
-def execute_order(trading_client, asset_type, ticker, side, price):
+def execute_order(trading_client, api_metrics, asset_type, ticker, side, price):
     """Submits order while logging the true cost, including real-world friction penalties."""
     
     if asset_type not in FEE_MODEL:
@@ -61,7 +61,8 @@ def execute_order(trading_client, asset_type, ticker, side, price):
                 f'Display: ${price:.2f} | ' 
                 f'Simulated Fill: ${simulated_execution_price:.2f}'
             )
-            
+        
+        api_metrics.record_request('submit_order')    
         trading_client.submit_order(order_data=order_data)
         print(f'    ✅ Order dispatched safely for {ticker}.')
         

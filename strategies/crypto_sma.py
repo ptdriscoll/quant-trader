@@ -1,6 +1,5 @@
 import pandas as pd
 from pandas_ta import sma
-from pandas_ta import sma
 from execution.orders import execute_order
 from strategies.base_strategy import BaseStrategy
 
@@ -20,13 +19,14 @@ class CryptoSMAStrategy(BaseStrategy):
         'LINK/USD'    
     ]
     
-    def __init__(self, trading_client, data_client):
+    def __init__(self, trading_client, data_client, api_metrics):
         self.trading_client = trading_client
         self.data_client = data_client
+        self.api_metrics = api_metrics
         self.universe = []
         self.execute_order = execute_order
         
-    def should_run(self):
+    def should_run(self, clock):
         return True        
         
     def optimize_universe(self):
@@ -58,7 +58,8 @@ class CryptoSMAStrategy(BaseStrategy):
                 timeframe=TimeFrame.Minute,
                 limit=30
             )
-
+            
+            self.api_metrics.record_request('get_crypto_bars')
             bars = self.data_client.get_crypto_bars(request)
             master_df = bars.df 
             if master_df.empty:
@@ -66,6 +67,7 @@ class CryptoSMAStrategy(BaseStrategy):
                 return            
     
             # 2. Get current positions
+            self.api_metrics.record_request('get_all_positions')
             positions = self.trading_client.get_all_positions()        
             current_positions = {p.symbol for p in positions}
             
@@ -93,6 +95,7 @@ class CryptoSMAStrategy(BaseStrategy):
                     if signal == 'BUY':
                         self.execute_order(
                             self.trading_client,
+                            self.api_metrics,
                             self.ASSET_TYPE,
                             ticker,
                             OrderSide.BUY,
@@ -102,6 +105,7 @@ class CryptoSMAStrategy(BaseStrategy):
                     elif signal == 'SELL':
                         self.execute_order(
                             self.trading_client,
+                            self.api_metrics,
                             self.ASSET_TYPE,
                             ticker,
                             OrderSide.SELL,

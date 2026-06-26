@@ -31,6 +31,9 @@ quant-trader/
 │   ├── equity_sma.py
 │   └── crypto_sma.py
 │
+├── utils/
+│   └── api_metrics.py
+│
 ├── database_manager.py
 ├── main.py
 └── trading_history.db
