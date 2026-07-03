@@ -34,13 +34,13 @@ trading_client = TradingClient(api_key=API_KEY, secret_key=SECRET_KEY, paper=Tru
 stock_data_client = StockHistoricalDataClient(api_key=API_KEY, secret_key=SECRET_KEY)
 crypto_data_client = CryptoHistoricalDataClient(api_key=API_KEY, secret_key=SECRET_KEY)
 
-equity_strategy = EquitySMAStrategy(
+equity_strategy = EquityStrategy(
     trading_client,
     stock_data_client,
     api_metrics,
     price_signal
 )
-crypto_strategy = CryptoSMAStrategy(
+crypto_strategy = CryptoStrategy(
     trading_client,
     crypto_data_client,
     api_metrics,
