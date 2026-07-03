@@ -14,11 +14,12 @@ class EquityStrategy(BaseStrategy):
     NAME = 'EquitySMAStrategy'
     ASSET_TYPE = 'equity'
     
-    def __init__(self, trading_client, data_client, api_metrics, signal):
+    def __init__(self, trading_client, data_client, api_metrics, signal, risk):
         self.trading_client = trading_client
         self.data_client = data_client
         self.api_metrics = api_metrics
         self.signal = signal
+        self.risk = risk
         self.universe = []
         self.execute_order = execute_order
         
@@ -104,18 +105,22 @@ class EquityStrategy(BaseStrategy):
             # 2. Get current positions
             self.api_metrics.record_request('get_all_positions')
             positions = self.trading_client.get_all_positions()
-            current_positions = {p.symbol for p in positions}
+            current_positions = {p.symbol: p for p in positions}
 
             # 3. Loop universe
             for ticker in self.universe:
                 try:
-                    # 4. Generate signal
+                    # 4. Generate signal and evaluate risk
                     df = master_df.loc[ticker].copy()
-                    is_owned = ticker in current_positions
+                    latest_close = df['close'].iloc[-1]
+                    position = current_positions.get(ticker)
+                    is_owned = position is not None 
                     signal = self.signal.generate(
                         df,
                         owned=is_owned
                     )
+                    if is_owned and self.risk.evaluate(latest_close, position):
+                        signal = 'SELL'
 
                     # 5. Execute
                     if signal == 'BUY':

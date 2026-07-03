@@ -16,6 +16,7 @@ from alpaca.data.historical import (
 from strategies.equity_strategy import EquityStrategy
 from strategies.crypto_strategy import CryptoStrategy
 from signals.moving_average_cross_signal import MovingAverageCrossSignal
+from risk.fixed_stop_loss_risk import FixedStopLossRisk
 from database_manager import init_database, log_balance
 from utils.api_metrics import ApiMetrics
 
@@ -26,25 +27,29 @@ load_dotenv()
 API_KEY = os.getenv('ALPACA_API_KEY')
 SECRET_KEY = os.getenv('ALPACA_SECRET_KEY')
 
-price_signal = MovingAverageCrossSignal()
-api_metrics = ApiMetrics()
-init_database()
-
+# Clients
 trading_client = TradingClient(api_key=API_KEY, secret_key=SECRET_KEY, paper=True)
 stock_data_client = StockHistoricalDataClient(api_key=API_KEY, secret_key=SECRET_KEY)
 crypto_data_client = CryptoHistoricalDataClient(api_key=API_KEY, secret_key=SECRET_KEY)
 
+# Utilities 
+api_metrics = ApiMetrics()
+init_database()
+
+# Strategies
 equity_strategy = EquityStrategy(
     trading_client,
     stock_data_client,
     api_metrics,
-    price_signal
+    MovingAverageCrossSignal(),
+    FixedStopLossRisk()
 )
 crypto_strategy = CryptoStrategy(
     trading_client,
     crypto_data_client,
     api_metrics,
-    price_signal
+    MovingAverageCrossSignal(),
+    FixedStopLossRisk()
 )
 strategies = [equity_strategy, crypto_strategy]
 

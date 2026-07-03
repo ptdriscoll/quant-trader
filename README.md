@@ -15,8 +15,9 @@ The framework performs:
 The system separates responsibilities:
 
 - **Engine Layer** (`main.py`) – Scheduling and strategy orchestration
-- **Strategy Layer** (`strategies/`) – Universe selection 
-- **Signal Layer** (`signals/`) – Buy/sell signal generation
+- **Strategy Layer** (`strategies/`) – Universe selection and coordinating signals and risks 
+- **Signal Layer** (`signals/`) – Buy and sell signal generation
+- **Risk Layer** (`risk/`) – Position exit and trade risk management
 - **Execution Layer** (`execution/`) – Order routing and trading friction models
 
 ## 📂 Project Structure
@@ -26,6 +27,10 @@ quant-trader/
 │
 ├── execution/
 │   └── orders.py
+│
+├── risk/
+│   ├── base_risk.py
+│   └── fixed_stop_loss_risk.py
 │
 ├── signals/
 │   ├── base_signal.py
@@ -106,12 +111,10 @@ To set up Alpaca Paper Trading, create an account at [https://alpaca.markets](ht
 
 ## 🛡 Risk Management
 
-Risk management models are currently under development. Planned modules include:
-
-- Fixed stop loss
-- Trailing stop
-- ATR-based stop loss
-- Position sizing
+| Risk Model | Description |
+|------------|-------------|
+| None | No risk management beyond signal reversal |
+| Fixed Stop Loss | Exit after fixed percentage loss |
 
 ## 📊 Performance Tracking
 
