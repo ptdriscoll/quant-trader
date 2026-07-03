@@ -19,10 +19,11 @@ class CryptoSMAStrategy(BaseStrategy):
         'LINK/USD'    
     ]
     
-    def __init__(self, trading_client, data_client, api_metrics):
+    def __init__(self, trading_client, data_client, api_metrics, signal):
         self.trading_client = trading_client
         self.data_client = data_client
         self.api_metrics = api_metrics
+        self.signal = signal
         self.universe = []
         self.execute_order = execute_order
         
@@ -34,16 +35,7 @@ class CryptoSMAStrategy(BaseStrategy):
         print(
             f'✅ [{self.NAME}] '
             f'Tracking {len(self.universe)} crypto pairs.'
-        )
-    
-    def generate_signal(self, close, sma, owned):
-        if close > sma and not owned:
-            return 'BUY'
-
-        if close < sma and owned:
-            return 'SELL'
-
-        return None      
+        )  
         
     def run(self):
         if not self.universe:
@@ -56,7 +48,7 @@ class CryptoSMAStrategy(BaseStrategy):
             request = CryptoBarsRequest(
                 symbol_or_symbols=self.universe,
                 timeframe=TimeFrame.Minute,
-                limit=30
+                limit=self.signal.LOOKBACK
             )
             
             self.api_metrics.record_request('get_crypto_bars')
@@ -74,21 +66,12 @@ class CryptoSMAStrategy(BaseStrategy):
             # 3. Loop universe
             for ticker in self.universe:
                 try:
-                    df = master_df.loc[ticker].copy()
-                    df['SMA_20'] = sma(df['close'], length=20)
-
-                    latest_close = df['close'].iloc[-1]
-                    latest_sma = df['SMA_20'].iloc[-1]
-                    is_owned = ticker in current_positions
-                    
-                    if pd.isna(latest_sma):
-                        continue
-
                     # 4. Generate signal
-                    signal = self.generate_signal(
-                        latest_close,
-                        latest_sma,
-                        is_owned
+                    df = master_df.loc[ticker].copy()
+                    is_owned = ticker in current_positions                    
+                    signal = self.signal.generate(
+                        df,
+                        owned=is_owned
                     )
 
                     # 5. Execute
