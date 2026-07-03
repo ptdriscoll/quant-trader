@@ -12,10 +12,11 @@ The framework performs:
 4. Automated order execution
 5. Portfolio performance tracking
 
-The system separates responsibilities into three layers:
+The system separates responsibilities:
 
 - **Engine Layer** (`main.py`) – Scheduling and strategy orchestration
-- **Strategy Layer** (`strategies/`) – Universe selection and signal generation
+- **Strategy Layer** (`strategies/`) – Universe selection 
+- **Signal Layer** (`signals/`) – Buy/sell signal generation
 - **Execution Layer** (`execution/`) – Order routing and trading friction models
 
 ## 📂 Project Structure
@@ -28,6 +29,7 @@ quant-trader/
 │
 ├── signals/
 │   ├── base_signal.py
+│   ├── moving_average_cross_signal.py
 │   └── price_sma_signal.py
 │
 ├── strategies/
@@ -90,14 +92,43 @@ To set up Alpaca Paper Trading, create an account at [https://alpaca.markets](ht
 
 ## 🚦 Strategies
 
-| Strategy   | Universe              | Optimization | Timeframe | Buy Signal      | Sell Signal     |
-| ---------- | --------------------- | ------------ | --------- | --------------- | --------------- |
-| Equity SMA | Top 100 Dollar Volume | Daily        | 1m        | Price > SMA(20) | Price < SMA(20) |
-| Crypto SMA | BTC, ETH              | None         | 1m        | Price > SMA(20) | Price < SMA(20) |
+| Strategy | Universe | Optimization |
+|----------|----------|--------------|
+| Equity | Top 100 U.S. stocks by daily dollar volume | Daily |
+| Crypto | Top-volume cryptocurrency pairs (currently BTC/USD, ETH/USD) | Static |
 
-## 📈 Performance Tracking
+## 📈 Signals
+
+| Signal | Timeframe | Buy Signal | Sell Signal |
+|--------|-----------|------------|-------------|
+| Price SMA | 1 minute | Price > SMA(20) | Price < SMA(20) |
+| Moving Average Cross | 1 minute | EMA crosses above SMA | EMA crosses below SMA |
+
+## 🛡 Risk Management
+
+Risk management models are currently under development. Planned modules include:
+
+- Fixed stop loss
+- Trailing stop
+- ATR-based stop loss
+- Position sizing
+
+## 📊 Performance Tracking
 
 Portfolio equity, cash balance, and unrealized P&L are recorded to a local SQLite database for performance analysis.
+
+## 📡 API Monitoring
+
+The framework tracks Alpaca API usage in real time, including:
+
+- Total requests
+- Requests per minute
+- Peak requests per minute
+- Failed requests
+- Retry attempts
+- Requests grouped by endpoint
+
+These metrics help monitor rate limits and diagnose connectivity issues during long-running sessions.
 
 ## ⚖️ License
 

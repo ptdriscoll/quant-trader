@@ -15,7 +15,7 @@ from alpaca.data.historical import (
 # Local imports 
 from strategies.equity_strategy import EquityStrategy
 from strategies.crypto_strategy import CryptoStrategy
-from signals.price_sma_signal import PriceSMASignal
+from signals.moving_average_cross_signal import MovingAverageCrossSignal
 from database_manager import init_database, log_balance
 from utils.api_metrics import ApiMetrics
 
@@ -26,7 +26,7 @@ load_dotenv()
 API_KEY = os.getenv('ALPACA_API_KEY')
 SECRET_KEY = os.getenv('ALPACA_SECRET_KEY')
 
-price_signal = PriceSMASignal()
+price_signal = MovingAverageCrossSignal()
 api_metrics = ApiMetrics()
 init_database()
 
