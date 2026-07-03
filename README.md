@@ -26,10 +26,14 @@ quant-trader/
 ├── execution/
 │   └── orders.py
 │
+├── signals/
+│   ├── base_signal.py
+│   └── price_sma_signal.py
+│
 ├── strategies/
 │   ├── base_strategy.py
-│   ├── equity_sma.py
-│   └── crypto_sma.py
+│   ├── equity_strategy.py
+│   └── crypto_strategy.py
 │
 ├── utils/
 │   └── api_metrics.py
