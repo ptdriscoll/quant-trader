@@ -7,7 +7,7 @@ from alpaca.trading.enums import OrderSide
 from alpaca.data.requests import CryptoBarsRequest
 from alpaca.data.timeframe import TimeFrame
 
-class CryptoSMAStrategy(BaseStrategy):
+class CryptoStrategy(BaseStrategy):
     NAME = 'CryptoSMAStrategy'
     ASSET_TYPE = 'crypto'
     TOP_VOLUME_CRYPTO = [

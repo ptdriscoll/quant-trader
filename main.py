@@ -13,8 +13,8 @@ from alpaca.data.historical import (
 )
 
 # Local imports 
-from strategies.equity_sma import EquitySMAStrategy
-from strategies.crypto_sma import CryptoSMAStrategy
+from strategies.equity_strategy import EquityStrategy
+from strategies.crypto_strategy import CryptoStrategy
 from signals.price_sma_signal import PriceSMASignal
 from database_manager import init_database, log_balance
 from utils.api_metrics import ApiMetrics

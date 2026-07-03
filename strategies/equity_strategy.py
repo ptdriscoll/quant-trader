@@ -10,7 +10,7 @@ from alpaca.trading.requests import GetAssetsRequest
 from alpaca.data.requests import StockBarsRequest, StockSnapshotRequest
 from alpaca.data.timeframe import TimeFrame
 
-class EquitySMAStrategy(BaseStrategy):
+class EquityStrategy(BaseStrategy):
     NAME = 'EquitySMAStrategy'
     ASSET_TYPE = 'equity'
     
