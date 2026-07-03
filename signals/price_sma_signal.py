@@ -1,12 +1,17 @@
 import pandas as pd
 from pandas_ta import sma
+from alpaca.data.timeframe import TimeFrame
 from signals.base_signal import BaseSignal
 
 class PriceSMASignal(BaseSignal):
-    LOOKBACK = 30
+    timeframe = TimeFrame.Minute
 
     def __init__(self, length=20):
         self.length = length
+
+    @property
+    def lookback(self):
+        return self.length * 3
 
     def generate(self, df, owned, position=None):
         df = df.copy()

@@ -90,8 +90,8 @@ class EquityStrategy(BaseStrategy):
             # 1. Fetch latest market data for universe
             request = StockBarsRequest(
                 symbol_or_symbols=self.universe,
-                timeframe=TimeFrame.Minute,
-                limit=self.signal.LOOKBACK
+                timeframe=self.signal.timeframe,
+                limit=self.signal.lookback
             )
             
             self.api_metrics.record_request('get_stock_bars')
