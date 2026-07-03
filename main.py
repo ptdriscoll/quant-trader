@@ -15,6 +15,7 @@ from alpaca.data.historical import (
 # Local imports 
 from strategies.equity_sma import EquitySMAStrategy
 from strategies.crypto_sma import CryptoSMAStrategy
+from signals.price_sma_signal import PriceSMASignal
 from database_manager import init_database, log_balance
 from utils.api_metrics import ApiMetrics
 
@@ -25,16 +26,27 @@ load_dotenv()
 API_KEY = os.getenv('ALPACA_API_KEY')
 SECRET_KEY = os.getenv('ALPACA_SECRET_KEY')
 
+price_signal = PriceSMASignal()
+api_metrics = ApiMetrics()
+init_database()
+
 trading_client = TradingClient(api_key=API_KEY, secret_key=SECRET_KEY, paper=True)
 stock_data_client = StockHistoricalDataClient(api_key=API_KEY, secret_key=SECRET_KEY)
 crypto_data_client = CryptoHistoricalDataClient(api_key=API_KEY, secret_key=SECRET_KEY)
 
-api_metrics = ApiMetrics()
-equity_strategy = EquitySMAStrategy(trading_client, stock_data_client, api_metrics)
-crypto_strategy = CryptoSMAStrategy(trading_client, crypto_data_client, api_metrics)
+equity_strategy = EquitySMAStrategy(
+    trading_client,
+    stock_data_client,
+    api_metrics,
+    price_signal
+)
+crypto_strategy = CryptoSMAStrategy(
+    trading_client,
+    crypto_data_client,
+    api_metrics,
+    price_signal
+)
 strategies = [equity_strategy, crypto_strategy]
-
-init_database()
 
 print() # Add terminal spacing
 
