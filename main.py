@@ -1,5 +1,8 @@
 import os
 import time
+import http
+import requests
+import urllib3
 import traceback
 from datetime import datetime
 from zoneinfo import ZoneInfo # Daylight Savings Time handling for New York
@@ -70,6 +73,7 @@ def main():
     est_tz = ZoneInfo('America/New_York') # DST-safe Eastern Time timezone object
     api_metrics.record_request('get_clock')
     previous_market_state = trading_client.get_clock().is_open
+    network_retry_delay = 10
     time.sleep(60) # Wait a minute before starting ongoing checks    
     
     # Check every 60 seconds
@@ -135,14 +139,30 @@ def main():
             )
             api_metrics.print_summary()
             
+            network_retry_delay = 10
             sleep_duration = max(0, 60 - elapsed)
             time.sleep(sleep_duration)
-            
+
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.Timeout,
+            urllib3.exceptions.ProtocolError,
+            http.client.RemoteDisconnected,
+        ) as e:
+            api_metrics.record_failure()
+            print(
+                f'🌐 Network error [{type(e).__name__}]'
+                f'\n    {e}'
+                f'\n    Retrying in {network_retry_delay}s...'
+            )
+            time.sleep(network_retry_delay)
+            network_retry_delay = min(network_retry_delay * 2, 300)
+
         except Exception as e:
             api_metrics.record_failure()
-            print(f"🚨 Global Engine Error [{type(e).__name__}]: {e}")
+            print(f'🚨 Global Engine Error [{type(e).__name__}]: {e}')
             traceback.print_exc()
-            time.sleep(10)            
+            raise            
 
 if __name__ == '__main__':
     main()

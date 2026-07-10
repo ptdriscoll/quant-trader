@@ -79,7 +79,7 @@ class EquityStrategy(BaseStrategy):
             
         except Exception as e:
             print(f'❌ [{self.NAME}] Comprehensive optimization failed: {e}.')
-            sys.exit(1)
+            raise
 
     def run(self):
         if not self.universe:
@@ -148,4 +148,5 @@ class EquityStrategy(BaseStrategy):
                     continue
 
         except Exception as e:
-            print(f'❌ [{self.NAME}] Strategy run failed: {e}')         
+            print(f'❌ [{self.NAME}] Strategy run failed: {e}')
+            raise    
