@@ -74,7 +74,7 @@ class ApiMetrics:
         else:
             uptime_string = f'{minutes}m'
 
-        print('/n📊 API Metrics')
+        print('\n📊 API Metrics')
         print(
             f'As of: {now.strftime("%Y-%m-%d %H:%M:%S ET")} '
             f'(Uptime: {uptime_string})'

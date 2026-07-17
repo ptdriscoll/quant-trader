@@ -56,13 +56,11 @@ crypto_strategy = CryptoStrategy(
 )
 strategies = [equity_strategy, crypto_strategy]
 
-print() # Add terminal spacing
-
 # ==============================================================================
 # CONTINUOUS LOOP WITH AUTOMATED TIME-CONDITIONALS
 # ==============================================================================
 def main():
-    print('🚀 Initializing System Engine...')
+    print('\n🚀 Initializing System Engine...')
     
     for strategy in strategies:
         strategy.optimize_universe()
@@ -77,8 +75,8 @@ def main():
     time.sleep(60) # Wait a minute before starting ongoing checks    
     
     # Check every 60 seconds
-    while True:
-        loop_start = time.time()
+    while True:        
+        loop_start = time.time()        
         try:
             api_metrics.record_request('get_clock')
             clock = trading_client.get_clock()  
@@ -117,14 +115,14 @@ def main():
                 time.sleep(sleep_time)
                 continue 
             
-            print(f'--- Starting Minute Scan [{current_date}, {current_time} ET] ---')         
+            print(f'\n--- Starting Minute Scan [{current_date}, {current_time} ET] ---')         
 
             for strategy in runnable_strategies:
                 print(f'Running {strategy.NAME}')
                 strategy.run()
                 
             elapsed = time.time() - loop_start # For locking exact 60-second boundaries            
-            print(f'--- Scan Finished. Local Math Engine Execution Time: {elapsed:.2f}s ---')
+            print(f'\n--- Scan Finished. Local Math Engine Execution Time: {elapsed:.2f}s ---')
             
             # Fetch, display, and record financial progress entries
             api_metrics.record_request('get_account')
