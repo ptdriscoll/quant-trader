@@ -117,7 +117,7 @@ def main():
                 time.sleep(sleep_time)
                 continue 
             
-            print(f'--- Starting Minute Scan [{current_date}, {current_time}] ---')         
+            print(f'--- Starting Minute Scan [{current_date}, {current_time} ET] ---')         
 
             for strategy in runnable_strategies:
                 print(f'Running {strategy.NAME}')
