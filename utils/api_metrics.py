@@ -82,7 +82,7 @@ class ApiMetrics:
         print('----------------')
 
         print(f'Total Requests: {self.total_requests}')
-        print(f'Requests/min: {self.requests_last_minute}')
+        print(f'Current Requests/min: {self.requests_last_minute}')
         print(f'Average Requests/min: {self.average_requests_per_minute:.1f}')
         print(f'Peak Requests/min: {self.peak_requests_per_minute}')
 
