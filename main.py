@@ -137,6 +137,9 @@ def main():
                 cash=float(account.cash),
                 pl=total_unrealized_pl
             )
+            
+            if network_retry_delay > 10:
+                api_metrics.record_reconnect()                
             api_metrics.print_summary()
             
             network_retry_delay = 10
@@ -150,6 +153,7 @@ def main():
             http.client.RemoteDisconnected,
         ) as e:
             api_metrics.record_failure()
+            api_metrics.record_retry()
             print(
                 f'🌐 Network error [{type(e).__name__}]'
                 f'\n    {e}'
