@@ -1,12 +1,10 @@
-import pandas as pd
-from utils.timeframe import Timeframe
+from downloader.base_downloader import BaseDownloader
+from downloader.alpaca_timeframe import to_alpaca
 
 from alpaca.data.requests import (
     StockBarsRequest,
     CryptoBarsRequest,
 )
-
-from downloader.base_downloader import BaseDownloader
 
 class AlpacaDownloader(BaseDownloader):
     def __init__(
@@ -30,7 +28,7 @@ class AlpacaDownloader(BaseDownloader):
         if asset_type == 'crypto':
             request = CryptoBarsRequest(
                 symbol_or_symbols=symbols,
-                timeframe=timeframe.alpaca,
+                timeframe=to_alpaca(timeframe),
                 start=start,
                 end=end,
             )
@@ -41,7 +39,7 @@ class AlpacaDownloader(BaseDownloader):
         elif asset_type == 'equity':
             request = StockBarsRequest(
                 symbol_or_symbols=symbols,
-                timeframe=timeframe.alpaca,
+                timeframe=to_alpaca(timeframe),
                 start=start,
                 end=end,
             )
