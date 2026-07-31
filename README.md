@@ -66,7 +66,7 @@ conda create -n quant_trading python=3.12 -y
 conda activate quant_trading
 
 # 3. Install developer SDK wrappers and utility dependencies via conda-forge
-conda install -c conda-forge alpaca-py pandas-ta python-dotenv tzdata  pytz -y
+conda install -c conda-forge alpaca-py pandas-ta python-dotenv tzdata pytz fastparquet -y
 
 # 4. If using use Miniconda instead of the full Anaconda distribution, install pandas
 conda install pandas -y
@@ -90,7 +90,7 @@ venv\Scripts\activate
 pip install --upgrade pip
 
 # 4. Install the full pipeline package bundle
-pip install pandas alpaca-py pandas-ta python-dotenv tzdata  pytz
+pip install pandas alpaca-py pandas-ta python-dotenv tzdata pytz fastparquet
 ```
 
 To set up Alpaca Paper Trading, create an account at [https://alpaca.markets](https://alpaca.markets) and get an API key and secret. Then rename the `.env.example` file to `.env` and set the variables `ALPACA_PAPER_KEY` and `ALPACA_PAPER_SECRET` to match those from your account.
