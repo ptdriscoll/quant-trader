@@ -25,6 +25,10 @@ The system separates responsibilities:
 ```text
 quant-trader/
 │
+├── backtesting/
+│   ├── backtest_engine.py
+│   └── historical_data_feed.py
+│
 ├── data/
 │   ├── data_processor.py
 │   └── validators.py
