@@ -1,20 +1,31 @@
-# === Security & API Keys ===
+# Security & API Keys
 .env
 
-# === Local Databases ===
+# Local Databases
 *.db
 *.sqlite3
 
-# === Conda & Python Environment Data ===
+# Historical Market Data
+historical_data/
+
+# Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
 .pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Virtual Environments
 .conda/
 env/
 venv/
+.venv/
 
-# === Mac/Windows System Files ===
+# IDEs
+.vscode/
+.idea/
+
+# macOS / Windows
 .DS_Store
 Thumbs.db

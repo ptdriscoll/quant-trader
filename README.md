@@ -25,8 +25,22 @@ The system separates responsibilities:
 ```text
 quant-trader/
 │
+├── data/
+│   ├── data_processor.py
+│   └── validators.py
+│
+├── downloader/
+│   ├── alpaca_downloader.py
+│   ├── alpaca_timeframe.py
+│   ├── base_downloader.py
+│   ├── data_processor.py
+│   ├── cache_manager.py
+│   └── download_manager.py
+│
 ├── execution/
 │   └── orders.py
+│
+├── historical_data/ ← not tracked
 │
 ├── risk/
 │   ├── base_risk.py
@@ -47,6 +61,7 @@ quant-trader/
 │
 ├── database_manager.py
 ├── main.py
+├── download.py 
 └── trading_history.db
 ```
 
