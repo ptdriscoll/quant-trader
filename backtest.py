@@ -26,7 +26,11 @@ def main():
     )
 
     # Create engine
-    engine = BacktestEngine(data=processed_df, strategy=strategy)
+    engine = BacktestEngine(
+        data=processed_df,
+        strategy=strategy,
+        symbol='BTC/USD'
+    )
 
     # Run
     engine.run()
