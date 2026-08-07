@@ -72,12 +72,7 @@ class CryptoStrategy(BaseStrategy):
                     latest_close = df['close'].iloc[-1]
                     position = current_positions.get(ticker)
                     is_owned = position is not None                    
-                    signal = self.signal.generate(
-                        df,
-                        owned=is_owned
-                    )
-                    if is_owned and self.risk.evaluate(latest_close, position):
-                        signal = 'SELL'
+                    signal = self.evaluate(df, position)
 
                     # 5. Execute
                     if signal == 'BUY':
