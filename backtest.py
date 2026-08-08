@@ -41,6 +41,22 @@ def main():
         equity_curve=engine.equity_curve,
         trades=engine.trades
     )
+    
+    print()
+    for trade in engine.completed_trades[:5]:
+        print(
+            trade.entry_timestamp,
+            '→',
+            trade.exit_timestamp,
+            trade.profit,
+            f'({trade.return_pct:.2%})'
+        )
+
+    print()
+    print(
+        f'Completed trades: '
+        f'{len(engine.completed_trades)}'
+    )    
 
     print()
     print(
