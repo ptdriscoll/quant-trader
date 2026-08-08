@@ -7,6 +7,7 @@ from backtesting.backtest_engine import BacktestEngine
 from strategies.crypto_strategy import CryptoStrategy
 from signals.moving_average_cross_signal import MovingAverageCrossSignal
 from risk.fixed_stop_loss_risk import FixedStopLossRisk
+from backtesting.performance import Performance
 
 def main():
     # Load historical data
@@ -35,11 +36,31 @@ def main():
     # Run
     engine.run()
     
+    performance = Performance(
+        initial_cash=10000,
+        equity_curve=engine.equity_curve,
+        trades=engine.trades
+    )
+
     print()
-    print(f'Trades: {len(engine.trades)}')
     print(
         f'Final portfolio value: '
-        f'${engine.equity_curve[-1]["portfolio_value"]:,.2f}'
+        f'${performance.final_value():,.2f}'
+    )
+
+    print(
+        f'Total profit: '
+        f'${performance.total_profit():,.2f}'
+    )
+
+    print(
+        f'Total return: '
+        f'{performance.total_return():.2%}'
+    )
+
+    print(
+        f'Trades: '
+        f'{performance.trade_count()}'
     )
 
 if __name__ == '__main__':
