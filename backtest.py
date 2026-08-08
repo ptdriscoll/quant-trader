@@ -34,6 +34,13 @@ def main():
 
     # Run
     engine.run()
+    
+    print()
+    print(f'Trades: {len(engine.trades)}')
+    print(
+        f'Final portfolio value: '
+        f'${engine.equity_curve[-1]["portfolio_value"]:,.2f}'
+    )
 
 if __name__ == '__main__':
     main()
