@@ -27,7 +27,12 @@ quant-trader/
 │
 ├── backtesting/
 │   ├── backtest_engine.py
-│   └── historical_data_feed.py
+│   ├── historical_data_feed.py
+│   ├── performance.py
+│   ├── portfolio.py
+│   ├── position_sizer.py
+│   ├── simulated_broker.py
+│   └── trade.py
 │
 ├── data/
 │   ├── data_processor.py
@@ -37,7 +42,6 @@ quant-trader/
 │   ├── alpaca_downloader.py
 │   ├── alpaca_timeframe.py
 │   ├── base_downloader.py
-│   ├── data_processor.py
 │   ├── cache_manager.py
 │   └── download_manager.py
 │
@@ -61,7 +65,9 @@ quant-trader/
 │   └── crypto_strategy.py
 │
 ├── utils/
-│   └── api_metrics.py
+│   ├── api_metrics.py
+│   ├── fee_model.py
+│   └── timeframe.py
 │
 ├── database_manager.py
 ├── main.py
