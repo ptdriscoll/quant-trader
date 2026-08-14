@@ -80,6 +80,10 @@ def main():
         f'Profit factor: '
         f'{performance.profit_factor():.2f}'
     )
+    print(
+        f'Max drawdown: '
+        f'{performance.max_drawdown():.2%}'
+    )    
 
 if __name__ == '__main__':
     main()

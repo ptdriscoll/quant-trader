@@ -95,3 +95,23 @@ class Performance:
             return float('inf')
 
         return gross_profit / gross_loss
+        
+    def max_drawdown(self):
+        if not self.equity_curve:
+            return 0
+
+        peak = self.equity_curve[0]['portfolio_value']
+        max_drawdown = 0
+
+        for point in self.equity_curve:
+            value = point['portfolio_value']
+
+            if value > peak:
+                peak = value
+
+            drawdown = (value - peak) / peak
+
+            if drawdown < max_drawdown:
+                max_drawdown = drawdown
+
+        return max_drawdown  
