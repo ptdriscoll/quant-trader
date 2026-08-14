@@ -44,6 +44,26 @@ def main():
     )
     
     print()
+    print('Completed Trade Performance')
+    print(
+        f'Profit before costs: '
+        f'${performance.completed_trade_profit_before_costs():,.2f}'
+    )
+    print(
+        f'Slippage cost: '
+        f'-${performance.total_slippage():,.2f}'
+    )
+    print(
+        f'Fees: '
+        f'-${performance.total_fees():,.2f}'
+    )
+    print(
+        f'Net trade profit: '
+        f'${performance.completed_trade_profit():,.2f}'
+    )
+
+    print()
+    print('Portfolio Performance')
     print(
         f'Final portfolio value: '
         f'${performance.final_value():,.2f}'

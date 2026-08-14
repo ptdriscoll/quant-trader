@@ -114,4 +114,28 @@ class Performance:
             if drawdown < max_drawdown:
                 max_drawdown = drawdown
 
-        return max_drawdown  
+        return max_drawdown   
+
+    def completed_trade_profit(self):
+        return sum(
+            trade.profit
+            for trade in self.completed_trades
+        )
+
+    def completed_trade_profit_before_costs(self):
+        return sum(
+            trade.profit_before_costs
+            for trade in self.completed_trades
+        )        
+
+    def total_fees(self):
+        return sum(
+            trade.total_fees
+            for trade in self.completed_trades
+        )
+
+    def total_slippage(self):
+        return sum(
+            trade.total_slippage
+            for trade in self.completed_trades
+        )

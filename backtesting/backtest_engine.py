@@ -58,7 +58,8 @@ class BacktestEngine:
                         symbol=self.symbol,
                         side='BUY',
                         quantity=quantity,
-                        price=execution['price'],
+                        market_price=latest_price,
+                        execution_price=execution['price'],
                         fee=execution['fee']
                     )
                     
@@ -87,7 +88,8 @@ class BacktestEngine:
                     symbol=self.symbol,
                     side='SELL',
                     quantity=quantity,
-                    price=execution['price'],
+                    market_price=latest_price,
+                    execution_price=execution['price'],
                     fee=execution['fee']
                 )
                 
@@ -99,10 +101,12 @@ class BacktestEngine:
                         exit_timestamp=timestamp,
                         symbol=self.symbol,
                         quantity=self.open_trade.quantity,
-                        entry_price=self.open_trade.price,
-                        exit_price=execution['price'],
+                        entry_price=self.open_trade.execution_price,
+                        exit_price=trade.execution_price,
                         entry_fee=self.open_trade.fee,
-                        exit_fee=execution['fee']
+                        exit_fee=trade.fee,
+                        entry_slippage=self.open_trade.slippage,
+                        exit_slippage=trade.slippage
                     )
 
                     self.completed_trades.append(completed_trade)
@@ -118,15 +122,15 @@ class BacktestEngine:
                 )
                 
                 trade = completed_trade
-
-                print('COMPLETED TRADE')
-                print('  Entry price:', trade.entry_price)
-                print('  Exit price:', trade.exit_price)
-                print('  Entry fee:', trade.entry_fee)
-                print('  Exit fee:', trade.exit_fee)
-                print('  Quantity:', trade.quantity)
-                print('  Profit:', trade.profit)
-                print('  Return:', trade.return_pct) 
+                
+                # print('COMPLETED TRADE')
+                # print('  Entry price:', trade.entry_price)
+                # print('  Exit price:', trade.exit_price)
+                # print('  Entry fee:', trade.entry_fee)
+                # print('  Exit fee:', trade.exit_fee)
+                # print('  Quantity:', trade.quantity)
+                # print('  Profit:', trade.profit)
+                # print('  Return:', trade.return_pct) 
                 
             portfolio_value = self.portfolio.market_value(
                 {
