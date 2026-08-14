@@ -25,16 +25,20 @@ class Portfolio:
         self,
         symbol,
         quantity,
-        price
+        price,
+        fee=0
     ):
         cost = quantity * price
-        if cost > self.cash:
+        total_cost = cost + fee
+
+        if total_cost > self.cash:
             raise ValueError(
                 f'Insufficient cash to buy '
                 f'{quantity} {symbol} at {price}.'
             )
 
-        self.cash -= cost        
+        self.cash -= total_cost
+
         self.positions[symbol] = SimulatedPosition(
             symbol=symbol,
             quantity=quantity,
@@ -44,14 +48,17 @@ class Portfolio:
     def sell(
         self,
         symbol,
-        price
+        price,
+        fee=0
     ):
         position = self.positions.get(symbol)
+
         if position is None:
             return
 
         proceeds = (position.quantity * price)
-        self.cash += proceeds
+        net_proceeds = proceeds - fee
+        self.cash += net_proceeds
         del self.positions[symbol]
 
     def market_value(self, prices):

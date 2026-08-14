@@ -8,6 +8,7 @@ class Trade:
     side: str
     quantity: float
     price: float
+    fee: float = 0
 
 @dataclass
 class CompletedTrade:
@@ -17,15 +18,31 @@ class CompletedTrade:
     quantity: float
     entry_price: float
     exit_price: float
+    entry_fee: float
+    exit_fee: float
+    
+    @property
+    def gross_profit(self):
+        return (
+            self.exit_price - self.entry_price
+        ) * self.quantity    
 
     @property
     def profit(self):
         return (
-            self.exit_price - self.entry_price
-        ) * self.quantity
+            self.gross_profit
+            - self.entry_fee
+            - self.exit_fee
+        )
 
     @property
     def return_pct(self):
-        return (
-            self.exit_price / self.entry_price
-        ) - 1
+        cost = (
+            self.entry_price * self.quantity
+            + self.entry_fee
+        )
+
+        if cost == 0:
+            return 0
+
+        return self.profit / cost

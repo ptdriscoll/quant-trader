@@ -47,7 +47,7 @@ class BacktestEngine:
                 )
 
                 if quantity > 0:
-                    self.broker.buy(
+                    execution = self.broker.buy(
                         self.symbol,
                         quantity,
                         latest_price
@@ -58,24 +58,27 @@ class BacktestEngine:
                         symbol=self.symbol,
                         side='BUY',
                         quantity=quantity,
-                        price=latest_price
+                        price=execution['price'],
+                        fee=execution['fee']
                     )
                     
                     self.trades.append(trade)
                     self.open_trade = trade
-
+                    
                     print(
                         timestamp,
                         'BUY',
                         self.symbol,
                         quantity,
-                        latest_price
+                        execution['price'],
+                        f'fee=${execution["fee"]:.2f}'
                     )
 
             elif signal == 'SELL' and position is not None:
                 quantity = position.quantity
-                self.broker.sell(
+                execution = self.broker.sell(
                     self.symbol,
+                    quantity,
                     latest_price
                 )
                 
@@ -84,7 +87,8 @@ class BacktestEngine:
                     symbol=self.symbol,
                     side='SELL',
                     quantity=quantity,
-                    price=latest_price
+                    price=execution['price'],
+                    fee=execution['fee']
                 )
                 
                 self.trades.append(trade)
@@ -96,7 +100,9 @@ class BacktestEngine:
                         symbol=self.symbol,
                         quantity=self.open_trade.quantity,
                         entry_price=self.open_trade.price,
-                        exit_price=latest_price
+                        exit_price=execution['price'],
+                        entry_fee=self.open_trade.fee,
+                        exit_fee=execution['fee']
                     )
 
                     self.completed_trades.append(completed_trade)
@@ -107,8 +113,20 @@ class BacktestEngine:
                     'SELL',
                     self.symbol,
                     quantity,
-                    latest_price
+                    execution['price'],
+                    f'fee=${execution["fee"]:.2f}'
                 )
+                
+                trade = completed_trade
+
+                print('COMPLETED TRADE')
+                print('  Entry price:', trade.entry_price)
+                print('  Exit price:', trade.exit_price)
+                print('  Entry fee:', trade.entry_fee)
+                print('  Exit fee:', trade.exit_fee)
+                print('  Quantity:', trade.quantity)
+                print('  Profit:', trade.profit)
+                print('  Return:', trade.return_pct) 
                 
             portfolio_value = self.portfolio.market_value(
                 {
