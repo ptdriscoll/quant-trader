@@ -3,12 +3,13 @@ import pandas as pd
 from utils.timeframe import Timeframe
 from data.data_processor import DataProcessor
 from backtesting.backtest_engine import BacktestEngine
-from backtesting.benchmark import BuyAndHoldBenchmark
 
 from strategies.crypto_strategy import CryptoStrategy
 from signals.moving_average_cross_signal import MovingAverageCrossSignal
 from risk.fixed_stop_loss_risk import FixedStopLossRisk
+
 from backtesting.performance import Performance
+from backtesting.benchmark import BuyAndHoldBenchmark
 
 def main():
     # Load historical data
@@ -110,10 +111,16 @@ def main():
         f'{performance.max_drawdown():.2%}'
     )   
 
-    # Show benchmark
+    # Show benchmarks
     benchmark = BuyAndHoldBenchmark(initial_cash=10_000)
     benchmark_result = benchmark.run(processed_df)
-
+    benchmark_performance = Performance(
+        initial_cash=10_000,
+        equity_curve=benchmark_result['equity_curve'],
+        trades=[],
+        completed_trades=[]
+    )
+    
     print()
     print('Buy & Hold Benchmark')
     print(
@@ -128,7 +135,10 @@ def main():
         f'Total return: '
         f'{benchmark_result["total_return"]:.2%}'
     )
-    
+    print(
+        f'Max drawdown: '
+        f'{benchmark_performance.max_drawdown():.2%}'
+    )     
 
 if __name__ == '__main__':
     main()
