@@ -3,6 +3,7 @@ import pandas as pd
 from utils.timeframe import Timeframe
 from data.data_processor import DataProcessor
 from backtesting.backtest_engine import BacktestEngine
+from backtesting.benchmark import BuyAndHoldBenchmark
 
 from strategies.crypto_strategy import CryptoStrategy
 from signals.moving_average_cross_signal import MovingAverageCrossSignal
@@ -107,7 +108,27 @@ def main():
     print(
         f'Max drawdown: '
         f'{performance.max_drawdown():.2%}'
-    )    
+    )   
+
+    # Show benchmark
+    benchmark = BuyAndHoldBenchmark(initial_cash=10_000)
+    benchmark_result = benchmark.run(processed_df)
+
+    print()
+    print('Buy & Hold Benchmark')
+    print(
+        f'Final portfolio value: '
+        f'${benchmark_result["final_value"]:,.2f}'
+    )
+    print(
+        f'Total profit: '
+        f'${benchmark_result["total_profit"]:,.2f}'
+    )
+    print(
+        f'Total return: '
+        f'{benchmark_result["total_return"]:.2%}'
+    )
+    
 
 if __name__ == '__main__':
     main()
