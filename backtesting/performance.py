@@ -139,3 +139,12 @@ class Performance:
             trade.total_slippage
             for trade in self.completed_trades
         )
+        
+    def open_position_profit(self):
+        if not self.equity_curve:
+            return 0
+
+        return (
+            self.total_profit()
+            - self.completed_trade_profit()
+        )        

@@ -73,6 +73,10 @@ def main():
         f'${performance.total_profit():,.2f}'
     )
     print(
+        f'Open position P&L: '
+        f'${performance.open_position_profit():,.2f}'
+    )    
+    print(
         f'Total return: '
         f'{performance.total_return():.2%}'
     )
