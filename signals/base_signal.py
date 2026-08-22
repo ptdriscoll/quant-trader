@@ -13,6 +13,9 @@ class BaseSignal(ABC):
         '''Timeframe required by this signal.'''
         pass
 
+    def prepare(self, df):
+        return df
+
     @abstractmethod
     def generate(self, df, owned, position=None):
         '''

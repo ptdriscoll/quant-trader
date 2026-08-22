@@ -25,12 +25,25 @@ class ParameterSweep:
         slow_lengths
     ):
         results = []
+        total = 0
 
+        # Count valid parameter combinations
         for fast_type in fast_types:
             for fast_length in fast_lengths:
                 for slow_type in slow_types:
                     for slow_length in slow_lengths:
-                    
+
+                        if fast_length < slow_length:
+                            total += 1
+
+        completed = 0
+
+        # Run parameter combinations
+        for fast_type in fast_types:
+            for fast_length in fast_lengths:
+                for slow_type in slow_types:
+                    for slow_length in slow_lengths:
+
                         if fast_length >= slow_length:
                             continue
 
@@ -73,14 +86,28 @@ class ParameterSweep:
                                 'slow_length': slow_length,
                                 'final_value': performance.final_value(),
                                 'return': performance.total_return(),
-                                'max_drawdown': (performance.max_drawdown()),
+                                'max_drawdown': (
+                                    performance.max_drawdown()
+                                ),
                                 'trades': performance.trade_count(),
-                                'completed_trades': (performance.completed_trade_count()),
-                                'profit_factor': (performance.profit_factor())
+                                'completed_trades': (
+                                    performance.completed_trade_count()
+                                ),
+                                'profit_factor': (
+                                    performance.profit_factor()
+                                )
                             }
                         )
-        
-        if self.sort:    
+
+                        completed += 1
+
+                        print(
+                            f'Completed {completed}/{total}: '
+                            f'{fast_type.upper()} {fast_length} / '
+                            f'{slow_type.upper()} {slow_length}'
+                        )
+
+        if self.sort:
             results.sort(
                 key=lambda result: result[self.sort],
                 reverse=True

@@ -150,6 +150,9 @@ def main():
     )  
 
     # Run sweep
+    print()
+    print('Running parameter sweep...')    
+    
     sweep = ParameterSweep(
         data=processed_df,
         symbol='BTC/USD',
@@ -158,10 +161,10 @@ def main():
     )
 
     results = sweep.run(
-        fast_types=['ema'],
-        fast_lengths=[5, 9],
-        slow_types=['sma'],
-        slow_lengths=[20, 30]
+        fast_types=['ema', 'sma'],
+        fast_lengths=[5, 7, 9, 11, 13, 15, 17, 19],
+        slow_types=['ema', 'sma'],
+        slow_lengths=[20, 25, 30, 35, 40, 50, 60, 75, 100]
     )
 
     print()

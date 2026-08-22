@@ -13,19 +13,23 @@ class BacktestEngine:
         initial_cash=10000        
     ):
         self.initial_cash = initial_cash
-        self.feed = HistoricalDataFeed(data)
         self.strategy = strategy
         self.symbol = symbol
+        
+        self.data = self.strategy.signal.prepare(data)
+        self.feed = HistoricalDataFeed(self.data)        
+        
         self.portfolio = Portfolio(initial_cash)
         self.broker = SimulatedBroker(self.portfolio)
         self.position_sizer = PositionSizer()
+        
         self.trades = []
         self.equity_curve = []
         self.completed_trades = []
         self.open_trade = None
 
     def run(self, verbose=True):
-        self.feed.reset()
+        self.feed.reset()       
 
         while self.feed.has_next():
             self.feed.next()            

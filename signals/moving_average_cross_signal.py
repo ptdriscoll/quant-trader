@@ -18,33 +18,47 @@ class MovingAverageCrossSignal(BaseSignal):
         self.fast_length = fast_length
         self.slow_type = slow_type.lower()
         self.slow_length = slow_length
-        
+
         if self.fast_length <= 0:
             raise ValueError('fast_length must be greater than 0')
 
         if self.slow_length <= 0:
             raise ValueError('slow_length must be greater than 0')
-            
+
         if self.fast_type not in self.types:
-            raise ValueError(f'Unsupported fast moving type: {fast_type}')
+            raise ValueError(
+                f'Unsupported fast moving type: {fast_type}'
+            )
 
         if self.slow_type not in self.types:
-            raise ValueError(f'Unsupported slow moving type: {slow_type}')         
+            raise ValueError(
+                f'Unsupported slow moving type: {slow_type}'
+            )
 
     @property
     def lookback(self):
-        return max(self.fast_length, self.slow_length) * 3
+        return max(
+            self.fast_length,
+            self.slow_length
+        ) * 3
 
-    def _moving_average(self, series, ma_type, length):
+    def _moving_average(
+        self,
+        series,
+        ma_type,
+        length
+    ):
         if ma_type == 'ema':
             return ema(series, length=length)
 
         if ma_type == 'sma':
             return sma(series, length=length)
 
-        raise ValueError(f'Unsupported moving average type: {ma_type}')
+        raise ValueError(
+            f'Unsupported moving average type: {ma_type}'
+        )
 
-    def generate(self, df, owned, position=None):
+    def prepare(self, df):
         df = df.copy()
 
         df['FAST'] = self._moving_average(
@@ -59,6 +73,9 @@ class MovingAverageCrossSignal(BaseSignal):
             self.slow_length
         )
 
+        return df
+
+    def generate(self, df, owned, position=None):
         if len(df) < 2:
             return None
 
