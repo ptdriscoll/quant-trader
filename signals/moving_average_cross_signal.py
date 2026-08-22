@@ -5,6 +5,7 @@ from signals.base_signal import BaseSignal
 
 class MovingAverageCrossSignal(BaseSignal):
     timeframe = TimeFrame.Minute
+    types = ('ema', 'sma')
 
     def __init__(
         self,
@@ -17,6 +18,18 @@ class MovingAverageCrossSignal(BaseSignal):
         self.fast_length = fast_length
         self.slow_type = slow_type.lower()
         self.slow_length = slow_length
+        
+        if self.fast_length <= 0:
+            raise ValueError('fast_length must be greater than 0')
+
+        if self.slow_length <= 0:
+            raise ValueError('slow_length must be greater than 0')
+            
+        if self.fast_type not in self.types:
+            raise ValueError(f'Unsupported fast moving type: {fast_type}')
+
+        if self.slow_type not in self.types:
+            raise ValueError(f'Unsupported slow moving type: {slow_type}')         
 
     @property
     def lookback(self):

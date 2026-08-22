@@ -12,6 +12,7 @@ class BacktestEngine:
         symbol,
         initial_cash=10000        
     ):
+        self.initial_cash = initial_cash
         self.feed = HistoricalDataFeed(data)
         self.strategy = strategy
         self.symbol = symbol
@@ -23,7 +24,7 @@ class BacktestEngine:
         self.completed_trades = []
         self.open_trade = None
 
-    def run(self):
+    def run(self, verbose=True):
         self.feed.reset()
 
         while self.feed.has_next():
@@ -50,7 +51,8 @@ class BacktestEngine:
                     execution = self.broker.buy(
                         self.symbol,
                         quantity,
-                        latest_price
+                        latest_price,
+                        verbose=verbose                        
                     )
                    
                     trade = Trade(
@@ -66,21 +68,23 @@ class BacktestEngine:
                     self.trades.append(trade)
                     self.open_trade = trade
                     
-                    print(
-                        timestamp,
-                        'BUY',
-                        self.symbol,
-                        quantity,
-                        execution['price'],
-                        f'fee=${execution["fee"]:.2f}'
-                    )
+                    if verbose:
+                        print(
+                            timestamp,
+                            'BUY',
+                            self.symbol,
+                            quantity,
+                            execution['price'],
+                            f'fee=${execution["fee"]:.2f}'
+                        )
 
             elif signal == 'SELL' and position is not None:
                 quantity = position.quantity
                 execution = self.broker.sell(
                     self.symbol,
                     quantity,
-                    latest_price
+                    latest_price,
+                    verbose=verbose
                 )
                 
                 trade = Trade(
@@ -111,15 +115,16 @@ class BacktestEngine:
 
                     self.completed_trades.append(completed_trade)
                     self.open_trade = None
-
-                print(
-                    timestamp,
-                    'SELL',
-                    self.symbol,
-                    quantity,
-                    execution['price'],
-                    f'fee=${execution["fee"]:.2f}'
-                )
+                
+                if verbose:
+                    print(
+                        timestamp,
+                        'SELL',
+                        self.symbol,
+                        quantity,
+                        execution['price'],
+                        f'fee=${execution["fee"]:.2f}'
+                    )
                 
                 trade = completed_trade
                 

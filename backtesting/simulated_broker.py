@@ -14,7 +14,8 @@ class SimulatedBroker:
         self,
         symbol,
         quantity,
-        price
+        price,
+        verbose=True
     ):
         execution_price = (price * (1 + self.fees['slippage_pct']))
         gross_value = (quantity * execution_price)
@@ -27,12 +28,13 @@ class SimulatedBroker:
             fee
         )
         
-        print(
-            f'\nBUY execution: '
-            f'market={price:.4f} '
-            f'execution={execution_price:.4f} '
-            f'fee=${fee:.2f}'
-        )        
+        if verbose:
+            print(
+                f'\nBUY execution: '
+                f'market={price:.4f} '
+                f'execution={execution_price:.4f} '
+                f'fee=${fee:.2f}'
+            )        
 
         return {
             'price': execution_price,
@@ -43,19 +45,21 @@ class SimulatedBroker:
         self,
         symbol,
         quantity,
-        price
+        price,
+        verbose=True
     ):
         execution_price = (price * (1 - self.fees['slippage_pct']))
         gross_value = (quantity * execution_price)
         fee = self._sell_fee(gross_value)
         self.portfolio.sell(symbol, execution_price, fee)
         
-        print(
-            f'\nSELL execution: '
-            f'market={price:.4f} '
-            f'execution={execution_price:.4f} '
-            f'fee=${fee:.2f}'
-        )        
+        if verbose:
+            print(
+                f'\nSELL execution: '
+                f'market={price:.4f} '
+                f'execution={execution_price:.4f} '
+                f'fee=${fee:.2f}'
+            )        
 
         return {
             'price': execution_price,

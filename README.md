@@ -29,6 +29,7 @@ quant-trader/
 │   ├── backtest_engine.py
 │   ├── benchmark.py
 │   ├── historical_data_feed.py
+│   ├── parameter_test.py
 │   ├── performance.py
 │   ├── portfolio.py
 │   ├── position_sizer.py

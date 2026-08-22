@@ -10,6 +10,7 @@ from risk.fixed_stop_loss_risk import FixedStopLossRisk
 
 from backtesting.performance import Performance
 from backtesting.benchmark import BuyAndHoldBenchmark
+from backtesting.parameter_test import ParameterSweep
 
 def main():
     # Load historical data
@@ -18,13 +19,21 @@ def main():
     # Process data
     processor = DataProcessor(Timeframe.MINUTE)
     processed_df = processor.process(raw_df)
+    
+    # Set signal
+    signal = MovingAverageCrossSignal(
+        fast_type='ema',
+        fast_length=9,
+        slow_type='sma',
+        slow_length=20
+    )
 
     # Create strategy
     strategy = CryptoStrategy(
         trading_client=None,
         data_client=None,
         api_metrics=None,
-        signal=MovingAverageCrossSignal(),
+        signal=signal,
         risk=FixedStopLossRisk()
     )
 
@@ -39,7 +48,7 @@ def main():
     engine.run()
     
     performance = Performance(
-        initial_cash=10000,
+        initial_cash=engine.initial_cash,
         equity_curve=engine.equity_curve,
         trades=engine.trades,
         completed_trades=engine.completed_trades
@@ -138,7 +147,37 @@ def main():
     print(
         f'Max drawdown: '
         f'{benchmark_performance.max_drawdown():.2%}'
-    )     
+    )  
+
+    # Run sweep
+    sweep = ParameterSweep(
+        data=processed_df,
+        symbol='BTC/USD',
+        initial_cash=10000,
+        sort='return'
+    )
+
+    results = sweep.run(
+        fast_types=['ema'],
+        fast_lengths=[5, 9],
+        slow_types=['sma'],
+        slow_lengths=[20, 30]
+    )
+
+    print()
+    print('Parameter Sweep Results')
+
+    for result in results:
+        print(       
+            f'{result["fast_type"].upper()} '
+            f'{result["fast_length"]} / '
+            f'{result["slow_type"].upper()} '
+            f'{result["slow_length"]}: '
+            f'{result["return"]:.2%} '
+            f'| DD: {result["max_drawdown"]:.2%} '
+            f'| Trades: {result["trades"]} '
+            f'| PF: {result["profit_factor"]:.2f}'            
+        )    
 
 if __name__ == '__main__':
     main()
