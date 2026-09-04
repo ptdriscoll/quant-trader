@@ -19,7 +19,7 @@ def main():
     # Process data
     processor = DataProcessor(Timeframe.MINUTE)
     processed_df = processor.process(raw_df)
-    '''
+
     # Set signal
     signal = MovingAverageCrossSignal(
         fast_type='ema',
@@ -148,7 +148,7 @@ def main():
         f'Max drawdown: '
         f'{benchmark_performance.max_drawdown():.2%}'
     )  
-    '''
+
     # Run sweep
     print()
     print('Running parameter sweep...')   
@@ -162,20 +162,17 @@ def main():
         initial_cash=10000,
         sort='return'
     )
-    '''
+
     results = sweep.run(
         fast_types=['ema', 'sma'],
         fast_lengths=[5, 7, 9, 11, 13, 15, 17, 19],
         slow_types=['ema', 'sma'],
         slow_lengths=[20, 25, 30, 35, 40, 50, 60, 75, 100]
     )    
-    '''
-    results = sweep.run(
-        fast_types=['ema'],
-        fast_lengths=[17],
-        slow_types=['sma'],
-        slow_lengths=[100]
-    )
+
+    selected_parameters = sweep.best_result
+    if selected_parameters is None:
+        raise RuntimeError('Parameter sweep produced no valid results.')
 
     print()
     print('Parameter Sweep Results')
@@ -193,10 +190,10 @@ def main():
         ) 
 
     # Run selected parameters out-of-sample
-    fast_type = 'ema'
-    fast_length = 17
-    slow_type = 'sma'
-    slow_length = 100
+    fast_type = selected_parameters['fast_type']
+    fast_length = selected_parameters['fast_length']
+    slow_type = selected_parameters['slow_type']
+    slow_length = selected_parameters['slow_length']
 
     signal = MovingAverageCrossSignal(
         fast_type=fast_type,

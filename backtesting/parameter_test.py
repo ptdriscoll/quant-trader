@@ -15,7 +15,8 @@ class ParameterSweep:
         self.data = data
         self.symbol = symbol
         self.initial_cash = initial_cash
-        self.sort = sort         
+        self.sort = sort 
+        self.results = []    
 
     def run(
         self,
@@ -24,7 +25,7 @@ class ParameterSweep:
         slow_types,
         slow_lengths
     ):
-        results = []
+        self.results = []
         total = 0
 
         # Count valid parameter combinations
@@ -78,7 +79,7 @@ class ParameterSweep:
                             completed_trades=engine.completed_trades
                         )
 
-                        results.append(
+                        self.results.append(
                             {
                                 'fast_type': fast_type,
                                 'fast_length': fast_length,
@@ -108,9 +109,16 @@ class ParameterSweep:
                         )
 
         if self.sort:
-            results.sort(
+            self.results.sort(
                 key=lambda result: result[self.sort],
                 reverse=True
             )
 
-        return results
+        return self.results
+
+    @property
+    def best_result(self):
+        if not self.results:
+            return None
+
+        return self.results[0]
