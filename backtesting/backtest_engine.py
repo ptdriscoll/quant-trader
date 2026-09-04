@@ -28,7 +28,7 @@ class BacktestEngine:
         self.completed_trades = []
         self.open_trade = None
 
-    def run(self, verbose=True):
+    def run(self, verbose=True, start_bar=0):
         self.feed.reset()       
 
         while self.feed.has_next():
@@ -37,11 +37,15 @@ class BacktestEngine:
 
             if len(history) < self.strategy.signal.lookback:
                 continue
+                
+            latest_price = history['close'].iloc[-1]
+            timestamp = history.index[-1]                
+                
+            if self.feed.current_index <= start_bar:
+                continue
 
             position = self.portfolio.get_position(self.symbol)
             signal = self.strategy.evaluate(history, position)
-            latest_price = history['close'].iloc[-1]
-            timestamp = history.index[-1]
 
             if signal == 'BUY' and position is None:
                 quantity = (

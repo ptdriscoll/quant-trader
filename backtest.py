@@ -19,7 +19,7 @@ def main():
     # Process data
     processor = DataProcessor(Timeframe.MINUTE)
     processed_df = processor.process(raw_df)
-    
+    '''
     # Set signal
     signal = MovingAverageCrossSignal(
         fast_type='ema',
@@ -148,23 +148,33 @@ def main():
         f'Max drawdown: '
         f'{benchmark_performance.max_drawdown():.2%}'
     )  
-
+    '''
     # Run sweep
     print()
-    print('Running parameter sweep...')    
+    print('Running parameter sweep...')   
+
+    split_index = int(len(processed_df) * 0.70)
+    in_sample_data = processed_df.iloc[:split_index].copy()        
     
     sweep = ParameterSweep(
-        data=processed_df,
+        data=in_sample_data,
         symbol='BTC/USD',
         initial_cash=10000,
         sort='return'
     )
-
+    '''
     results = sweep.run(
         fast_types=['ema', 'sma'],
         fast_lengths=[5, 7, 9, 11, 13, 15, 17, 19],
         slow_types=['ema', 'sma'],
         slow_lengths=[20, 25, 30, 35, 40, 50, 60, 75, 100]
+    )    
+    '''
+    results = sweep.run(
+        fast_types=['ema'],
+        fast_lengths=[17],
+        slow_types=['sma'],
+        slow_lengths=[100]
     )
 
     print()
@@ -180,7 +190,79 @@ def main():
             f'| DD: {result["max_drawdown"]:.2%} '
             f'| Trades: {result["trades"]} '
             f'| PF: {result["profit_factor"]:.2f}'            
-        )    
+        ) 
+
+    # Run selected parameters out-of-sample
+    fast_type = 'ema'
+    fast_length = 17
+    slow_type = 'sma'
+    slow_length = 100
+
+    signal = MovingAverageCrossSignal(
+        fast_type=fast_type,
+        fast_length=fast_length,
+        slow_type=slow_type,
+        slow_length=slow_length
+    )
+
+    strategy = CryptoStrategy(
+        trading_client=None,
+        data_client=None,
+        api_metrics=None,
+        signal=signal,
+        risk=FixedStopLossRisk()
+    )
+    
+    warmup_start = split_index - signal.lookback
+    out_of_sample_data = processed_df.iloc[warmup_start:].copy()
+
+    engine = BacktestEngine(
+        data=out_of_sample_data,
+        strategy=strategy,
+        symbol='BTC/USD',
+        initial_cash=10000
+    )
+
+    engine.run(verbose=False, start_bar=signal.lookback)
+
+    performance = Performance(
+        initial_cash=engine.initial_cash,
+        equity_curve=engine.equity_curve,
+        trades=engine.trades,
+        completed_trades=engine.completed_trades
+    )
+
+    print()
+    print('Out-of-Sample Performance')
+    print(
+        f'Parameters: '
+        f'{fast_type.upper()} {fast_length} / '
+        f'{slow_type.upper()} {slow_length}'
+    )
+    print(
+        f'Final portfolio value: '
+        f'${performance.final_value():,.2f}'
+    )
+    print(
+        f'Total return: '
+        f'{performance.total_return():.2%}'
+    )
+    print(
+        f'Max drawdown: '
+        f'{performance.max_drawdown():.2%}'
+    )
+    print(
+        f'Completed trades: '
+        f'{performance.completed_trade_count()}'
+    )
+    print(
+        f'Open position P&L: '
+        f'${performance.open_position_profit():,.2f}'
+    )    
+    print(
+        f'Profit factor: '
+        f'{performance.profit_factor():.2f}'
+    )        
 
 if __name__ == '__main__':
     main()
