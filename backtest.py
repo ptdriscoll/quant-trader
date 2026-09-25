@@ -11,6 +11,7 @@ from risk.fixed_stop_loss_risk import FixedStopLossRisk
 from backtesting.performance import Performance
 from backtesting.benchmark import BuyAndHoldBenchmark
 from backtesting.parameter_test import ParameterSweep
+from backtesting.trade_analysis import TradeAnalysis
 
 def main():
     # Load historical data
@@ -53,6 +54,13 @@ def main():
         trades=engine.trades,
         completed_trades=engine.completed_trades
     )
+    
+    trade_analysis = TradeAnalysis(
+        engine.completed_trades
+    )
+
+    trade_analysis.print_summary()    
+    trade_analysis.print_trades()
     
     print()
     print('Completed Trade Performance')
