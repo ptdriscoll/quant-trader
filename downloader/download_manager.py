@@ -1,3 +1,4 @@
+import pandas as pd
 from downloader.cache_manager import CacheManager
 
 class DownloadManager:
@@ -18,51 +19,161 @@ class DownloadManager:
         end,
     ):
         results = {}
-        missing_symbols = []
-
-        # Load everything we already have
+        
         for symbol in symbols:
-            if self.cache.exists(
+            first_cached = self.cache.first_timestamp(
                 asset_type,
                 timeframe,
-                symbol,
-            ):
-                print(f'💾 Loading {symbol} from cache...')
+                symbol
+            )
+
+            last_cached = self.cache.last_timestamp(
+                asset_type,
+                timeframe,
+                symbol
+            )
+
+            # No cache: download the entire requested range.
+            if first_cached is None or last_cached is None:
+                print(
+                    f'📥 Downloading {symbol}...'
+                )
+
+                downloaded = self._download(
+                    asset_type,
+                    [symbol],
+                    timeframe,
+                    start,
+                    end,
+                )
+
+                if symbol in downloaded:
+                    self.cache.save(
+                        downloaded[symbol],
+                        asset_type=asset_type,
+                        timeframe=timeframe,
+                        symbol=symbol,
+                    )
+
+                    print(
+                        f'💾 Saved {symbol} to cache.'
+                    )
+
+                    results[symbol] = downloaded[symbol]
+
+                continue
+
+            # Requested range is already cached.
+            if first_cached <= start and last_cached >= end:
+                print(
+                    f'💾 Loading {symbol} from cache...'
+                )
 
                 results[symbol] = self.cache.load(
                     asset_type,
                     timeframe,
-                    symbol,
+                    symbol
                 )
 
-            else:
-                missing_symbols.append(symbol)
+                continue
 
-        # Download anything we're missing
-        if missing_symbols:
-            print(
-                f'📥 Downloading {len(missing_symbols)} symbol(s)...'
+            # Download missing portions.
+            cached_df = self.cache.load(
+                asset_type,
+                timeframe,
+                symbol
             )
 
-            downloaded = self.downloader.download(
-                asset_type=asset_type,
-                symbols=missing_symbols,
-                timeframe=timeframe,
-                start=start,
-                end=end,
-            )
+            downloaded_parts = []
 
-            for symbol, df in downloaded.items():
+            if start < first_cached:
+                print(
+                    f'📥 Downloading {symbol} '
+                    f'from {start} to {first_cached}...'
+                )
+
+                downloaded = self._download(
+                    asset_type,
+                    [symbol],
+                    timeframe,
+                    start,
+                    first_cached,
+                )
+
+                if symbol in downloaded:
+                    downloaded_parts.append(
+                        downloaded[symbol]
+                    )
+
+            if end > last_cached:
+                print(
+                    f'📥 Downloading {symbol} '
+                    f'from {last_cached} to {end}...'
+                )
+
+                downloaded = self._download(
+                    asset_type,
+                    [symbol],
+                    timeframe,
+                    last_cached,
+                    end,
+                )
+
+                if symbol in downloaded:
+                    downloaded_parts.append(
+                        downloaded[symbol]
+                    )
+
+            # Merge cached and newly downloaded data.
+            if downloaded_parts:
+                combined = (
+                    [cached_df] +
+                    downloaded_parts
+                )
+
+                combined_df = (
+                    pd.concat(combined)
+                    .sort_index()
+                )
+
+                combined_df = (
+                    combined_df[
+                        ~combined_df.index.duplicated(
+                            keep='first'
+                        )
+                    ]
+                )
 
                 self.cache.save(
-                    df,
+                    combined_df,
                     asset_type=asset_type,
                     timeframe=timeframe,
                     symbol=symbol,
                 )
 
-                print(f'💾 Saved {symbol} to cache.')
+                print(
+                    f'💾 Updated {symbol} cache.'
+                )
 
-                results[symbol] = df
+                results[symbol] = combined_df
+
+            else:
+                results[symbol] = cached_df
 
         return results
+
+    def _download(
+        self,
+        asset_type,
+        symbols,
+        timeframe,
+        start,
+        end,
+    ):
+        return self.downloader.download(
+            asset_type=asset_type,
+            symbols=symbols,
+            timeframe=timeframe,
+            start=start,
+            end=end,
+        )

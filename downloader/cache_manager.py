@@ -4,7 +4,7 @@ import pandas as pd
 class CacheManager:
     def __init__(self, root='historical_data'):
         self.root = Path(root)
-        
+
     def exists(
         self,
         asset_type,
@@ -51,6 +51,30 @@ class CacheManager:
 
         df.to_parquet(path)
 
+    def first_timestamp(
+        self,
+        asset_type,
+        timeframe,
+        symbol
+    ):
+        if not self.exists(
+            asset_type,
+            timeframe,
+            symbol
+        ):
+            return None
+
+        df = self.load(
+            asset_type,
+            timeframe,
+            symbol
+        )
+
+        if df.empty:
+            return None
+
+        return df.index.min()
+
     def last_timestamp(
         self,
         asset_type,
@@ -73,8 +97,8 @@ class CacheManager:
         if df.empty:
             return None
 
-        return df.index.max()     
-        
+        return df.index.max()
+
     def _get_file_path(
         self,
         asset_type,
@@ -82,6 +106,7 @@ class CacheManager:
         symbol
     ):
         safe_symbol = symbol.replace('/', '_')
+
         return (
             self.root
             / asset_type

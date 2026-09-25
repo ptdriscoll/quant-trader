@@ -20,8 +20,8 @@ from utils.timeframe import Timeframe
 asset_type = 'crypto'
 symbols = ['BTC/USD']
 timeframe = Timeframe.MINUTE 
-start = datetime(2024, 1, 1, tzinfo=ZoneInfo('UTC'))  
-end = datetime(2024, 1, 2, tzinfo=ZoneInfo('UTC'))
+start = datetime(2024, 1, 1, tzinfo=ZoneInfo('UTC'))
+end = datetime(2024, 2, 1, tzinfo=ZoneInfo('UTC'))
 
 def main():
     print('\n🚀 Initializing Historical Downloader...\n')
