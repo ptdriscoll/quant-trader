@@ -34,7 +34,8 @@ quant-trader/
 │   ├── portfolio.py
 │   ├── position_sizer.py
 │   ├── simulated_broker.py
-│   └── trade.py
+│   ├── trade.py
+│   └── trade_analysis.py
 │
 ├── data/
 │   ├── data_processor.py
